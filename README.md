@@ -23,7 +23,8 @@ templates
 utils
     ├── db_client.py          # MongoDB client connection logic
     ├── rate_limiters.py      # Rate limiting logic to avoid abuse
-.env                          # Environment variables (API keys, DB credentials)
+    
+.env                          # Environment variables (API keys, DB credentials) add your own
 app.py                        # Main Flask application file
 Procfile                      # Heroku deployment configuration
 ```
@@ -54,7 +55,7 @@ Procfile                      # Heroku deployment configuration
 
 - **Utils**: This folder includes utility files for connecting to MongoDB and handling rate limiting.
     - `db_client.py`: MongoDB client configuration and connection logic.
-    - `rate_limiters.py`: Implements rate-limiting functionality to avoid abuse of the system.
+    - `rate_limiters.py`: Implements rate-limit functionality to avoid abuse of the system.
 
 ### Static and Templates
 
@@ -66,8 +67,8 @@ Procfile                      # Heroku deployment configuration
 1. Clone the repository:
 
    ```bash
-   git clone <repo-url>
-   cd <project-directory>
+   git clone https://github.com/AuditoneCodebase/Defi-Sentinel
+   cd Defi-Sentinel
    ```
 
 2. Install dependencies:
