@@ -46,10 +46,10 @@
                 </td>
                 <td>{{ details.tvlMetrics.numPools }}</td>
                 <td>
-                    {% if details.pastHacks.slowmist and details.pastHacks.slowmist | length > 0 %}
-                        <span class="badge bg-danger text-white">Yes</span>
-                    {% else %}
+                    {% if details.pastHacks.slowmist.message == "No hacks found" and details.pastHacks.rekt_news.message == "No hacks found" %}
                         <span class="badge bg-success text-white">No</span>
+                    {% else %}
+                        <span class="badge bg-danger text-white">Yes</span>
                     {% endif %}
                 </td>
                 <td>
