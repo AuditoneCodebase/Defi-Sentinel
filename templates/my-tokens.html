@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}My Tokens - DeFi Sentinel{% endblock %}
+{% block tokens_active %}active{% endblock %}
+
+{% block content %}
+    <h3 class="text-center">📜 My Tokens</h3>
+
+    <!-- Tokens Table -->
+    <table class="table table-striped table-bordered mt-4">
+        <thead class="bg-dark text-white">
+            <tr>
+                <th>Symbol</th>
+                <th>Balance</th>
+                <th>USD Price</th>
+                <th>APY (%)</th>
+                <th>Audit Security Score</th>
+                <th>Past Hacks</th>
+                <th>Total TVL (USD)</th>
+                <th>Impermanent Loss Risk</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="my-tokens-data">
+            {% if message %}
+                <tr><td colspan="9"> You do not held any tokens on chain and if you would like to analyse a specific token, check out Analyze token section </td></tr>
+            {% elif data|length == 0 %}
+                <tr><td colspan="9">You have no tokens.</td></tr>
+            {% else %}
+                {% for token_symbol, token_info in data.items() %}
+                    <tr>
+                        <td>{{ token_info.tokenSymbol }}</td>
+                        <td>{{ token_info.balance }}</td>
+                        <td>{{ token_info.usdPrice if token_info.usdPrice != 'NA' else 'NA' }}</td>
+                        <td>{{ token_info.apy if token_info.apy != 'NA' else 'NA' }}%</td>
+                        <td>{{ token_info.auditSecurityScore if token_info.auditSecurityScore != 'NA' else 'NA' }}</td>
+                        <td>{{ token_info.pastHacks if token_info.pastHacks != 'NA' else 'NA' }}</td>
+                        <td>{{ token_info.tvlMetrics.totalTvl if token_info.tvlMetrics.totalTvl != 'NA' else 'NA' }}</td>
+                        <td>
+                            {% if token_info.tvlMetrics.impermanentLossRisk != 'NA' %}
+                                {{ token_info.tvlMetrics.impermanentLossRisk }}%
+                            {% else %}
+                                NA
+                            {% endif %}
+                        </td>
+                        <td>
+                    <a href="{{ url_for('get_report', project_name=project) }}" target="_blank" class="btn btn-sm btn-dark">📄 View Report</a></td>
+                    </tr>
+                {% endfor %}
+            {% endif %}
+        </tbody>
+    </table>
+
+{% endblock %}

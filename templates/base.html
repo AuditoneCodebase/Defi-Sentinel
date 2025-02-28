@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}DeFi Sentinel{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+    <!-- CSS -->
+    <link type="text/css" href="{{ url_for('static', filename='css/neumorphism.css') }}" rel="stylesheet">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f9fa;
+        }
+        .container {
+            flex: 1;
+            padding: 20px;
+        }
+        .footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #222;
+            color: white;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- Header -->
+<header class="text-center py-4 bg-dark text-white">
+    <h1>DeFi Sentinel</h1>
+    <p class="lead">Your trusted agent for analyzing risks and opportunities in DeFi tokens and protocols</p>
+</header>
+
+
+<!-- Main Content -->
+<main class="container col-md-10">
+    <div class="row justify-content-center">
+        <div class="col-lg-12">
+            <div class="card bg-primary shadow-soft border-light p-4">
+                <ul class="nav nav-pills mb-3 " id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block agent_active %}{% endblock %}" id="tabs-text-0-tab"
+                           href="{{ url_for('dashboard') }}" role="tab">🔥 Agent Choice</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block tokens_active %}{% endblock %}" id="tabs-text-1-tab"
+                           href="{{ url_for('my_tokens') }}" role="tab">📜 My Tokens</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block analyze_active %}{% endblock %}" id="tabs-text-2-tab"
+                           href="{{ url_for('analyze_token') }}" role="tab">🔍 Analyze Token</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block about_active %}{% endblock %}" id="tabs-text-3-tab"
+                           href="{{ url_for('about_us') }}" role="tab">🚀 About Us</a>
+                    </li>
+                </ul>
+                <hr>
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="footer py-4 bg-dark">
+    <span>Copyright © 2025 | DeFi Sentinel</span>
+    <a href="https://twitter.com/yourhandle" target="_blank" class="text-white">
+        <img src="{{ url_for('static', filename='img/x-icon.png') }}" width="20" alt="Twitter">
+    </a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-rbsA1Gz5zyz3F1LGa4gF5OjgHnOspD8p5zvFWJ0lQQsIq9Jk2sx5F8V6Z5tMyu0w" crossorigin="anonymous"></script>
+
+</body>
+</html>

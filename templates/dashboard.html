@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Agent Choice - DeFi Sentinel{% endblock %}
+{% block agent_active %}active{% endblock %}
+{% block content %}
+
+    <h3 class="text-center">🔥 Agent Choice</h3>
+
+    <!-- Protocols Table -->
+    <table class="table table-striped table-bordered mt-4">
+        <thead class="bg-dark text-white">
+            <tr>
+                <th>Project</th>
+                <th>TVL (USD)</th>
+                <th>Avg APY</th>
+                <th>Security Score</th>
+                <th>Risk</th>
+                <th>IL Risk</th>
+                <th>Total Pools</th>
+                <th>Hacks Reported</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project, details in protocols.items() %}
+            <tr>
+                <td>{{ details.auditSecurityScore.project_name }}</td>
+                <td>${{ details.tvlMetrics.totalTvl }}</td>
+                <td>{{ details.tvlMetrics.avgApy }}%</td>
+                <td>{{ details.auditSecurityScore.total_score }}/100</td>
+                <td>
+                    {% if details.tvlMetrics.predictedProbability > 70 %}
+                        <span class="badge bg-danger text-white">High</span>
+                    {% elif details.tvlMetrics.predictedProbability > 50 %}
+                        <span class="badge bg-warning text-white">Medium</span>
+                    {% else %}
+                        <span class="badge bg-success">Low</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if details.tvlMetrics.impermanentLossRisk > 0 %}
+                        <span class="badge bg-warning text-white">Yes</span>
+                    {% else %}
+                        <span class="badge bg-success text-white">No</span>
+                    {% endif %}
+                </td>
+                <td>{{ details.tvlMetrics.numPools }}</td>
+                <td>
+                    {% if details.pastHacks.slowmist and details.pastHacks.slowmist | length > 0 %}
+                        <span class="badge bg-danger text-white">Yes</span>
+                    {% else %}
+                        <span class="badge bg-success text-white">No</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('get_report', project_name=project) }}" target="_blank" class="btn btn-sm btn-dark">📄 View Report</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Report Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title" id="reportModalLabel">Project Report</h5>
+                    <button type="button" class="btn-close btn-light" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="report-content">Loading...</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

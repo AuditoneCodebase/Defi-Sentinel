@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project_name }} Report - DeFi Sentinel{% endblock %}
+
+{% block content %}
+
+    <div class="card bg-light shadow-soft border-light p-4">
+        <div class="card-header bg-dark text-white">
+            <h3>{{ project_name }} - Security & Risk Report</h3>
+        </div>
+        <div class="card-body">
+            <div id="report-content">
+                {{ report | markdown | safe }}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

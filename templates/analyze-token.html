@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze Token - DeFi Sentinel{% endblock %}
+{% block analyze_active %}active{% endblock %}
+
+{% block content %}
+    <h3>🔍 Analyze Token</h3>
+    <input type="text" id="token-symbol" placeholder="Enter Token Symbol">
+    <button id="analyze-btn">Analyze</button>
+    <div id="analysis-result"></div>
+
+    <script>
+        $("#analyze-btn").click(function () {
+            let symbol = $("#token-symbol").val().trim();
+            if (symbol) {
+                $.get("/analyze-token/" + symbol, function (data) {
+                    let result = data.error ? `<p>${data.error}</p>` : `
+                        <p><b>Risk Score:</b> ${data.riskScore}</p>
+                        <p><b>Volatility:</b> ${data.volatility}</p>
+                    `;
+                    $("#analysis-result").html(result);
+                });
+            }
+        });
+    </script>
+{% endblock %}
