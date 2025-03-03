@@ -41,6 +41,7 @@ def push_report_to_db(project_name):
     - Predicted Probability of Decline: {tvl_metrics.get("predictedProbability", "Unknown")}%
 
     Provide an expert-level risk analysis for users interacting with protocol including security insights, investment risks, and any other.
+    If audits count is 0, you do not have data but it does not indicate that there are no audits done for the project.
     """
     response = openai_client.chat.completions.create(
         model="gpt-4o",
@@ -52,3 +53,4 @@ def push_report_to_db(project_name):
     ai_report = response.choices[0].message.content
 
     db.aiReports.insert_one({"_id":uuid.uuid4().hex,"aiReport":ai_report,"project":project_name,"createdAt":datetime.datetime.utcnow()})
+

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>{% block title %}DeFi Sentinel{% endblock %}</title>
+    <title>{% block title %}Sonic's Risk Switch {% endblock %}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -37,17 +37,40 @@
             position: fixed;
             bottom: 0;
         }
+        .icon-heading {
+          display: flex;           /* enables flex layout */
+          align-items: center;     /* vertical centering within the container */
+          gap: 8px;                /* small space between icon and text (optional) */
+        }
 
+        .icon-img {
+          width: 40px;
+          height: 40px;
+        }
+        .custom-nav {
+          display: flex;
+          align-items: center;      /* vertically center items if different heights */
+        }
+
+        .logo-item {
+          margin-left: auto;        /* pushes this item to the far right */
+        }
     </style>
 </head>
 
 <body>
 
 <!-- Header -->
-<header class="text-center py-4 bg-dark text-white">
-    <h1>DeFi Sentinel</h1>
-    <p class="lead">Your trusted agent for analyzing risks and opportunities in DeFi tokens and protocols</p>
-</header>
+<div class="text-center py-4 bg-dark text-white">
+        <h1 class="icon-heading justify-content-center">
+          <img
+            src="/static/img/favicon.png"
+            alt="Icon"
+            class="icon-img"
+          > Sonic's Risk Watch
+        </h1>
+        <p class="lead">Your trusted agent for analyzing risks and opportunities in DeFi tokens and protocols</p>
+</div>
 
 
 <!-- Main Content -->
@@ -72,6 +95,13 @@
                         <a class="nav-link {% block about_active %}{% endblock %}" id="tabs-text-3-tab"
                            href="{{ url_for('about_us') }}" role="tab">🚀 About Us</a>
                     </li>
+                    <li class="nav-item logo-item justify-content-center" role="presentation">by
+                        <a href="https://auditone.io" target="_blank">
+                          <img src="/static/img/auditone.png"
+                               alt="Logo"
+                               style="height: auto; width: 200px; vertical-align: middle;" />
+                        </a>
+                      </li>
                 </ul>
                 <hr>
                 {% block content %}{% endblock %}
@@ -82,8 +112,8 @@
 
 <!-- Footer -->
 <footer class="footer py-4 bg-dark">
-    <span>Copyright © 2025 | DeFi Sentinel</span>
-    <a href="https://twitter.com/yourhandle" target="_blank" class="text-white">
+    <span>Copyright © 2025 | Sonic's Risk Watch</span>
+    <a href="https://x.com/AuditOne_DAO" target="_blank" class="text-white">
         <img src="{{ url_for('static', filename='img/x-icon.png') }}" width="20" alt="Twitter">
     </a>
 </footer>

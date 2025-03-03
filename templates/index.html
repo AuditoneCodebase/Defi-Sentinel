@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>DeFi Sentinel - Connect Wallet</title>
+    <title>Sonic's Risk Switch - Connect Wallet</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
@@ -33,12 +33,29 @@
             color: white;
             align-items: center;
         }
+        .icon-heading {
+          display: flex;           /* enables flex layout */
+          align-items: center;     /* vertical centering within the container */
+          gap: 8px;                /* small space between icon and text (optional) */
+        }
+
+        .icon-img {
+          width: 40px;
+          height: 40px;
+        }
+
     </style>
 </head>
 
 <body>
     <div class="text-center py-4 bg-dark text-white">
-        <h1>DeFi Sentinel</h1>
+        <h1 class="icon-heading justify-content-center">
+          <img
+            src="/static/img/favicon.png"
+            alt="Icon"
+            class="icon-img"
+          > Sonic's Risk Watch
+        </h1>
         <p class="lead">Your trusted agent for analyzing risks and opportunities in DeFi tokens and protocols</p>
     </div>
     <main class="full-height-container">
@@ -47,7 +64,7 @@
                 <div class="col-md-6 d-flex align-items-center">
                     <div>
                         <h2>Navigate DeFi Safely</h2>
-                        <h5>DeFi Sentinel provides comprehensive insights into token risks, security vulnerabilities, and profitable opportunities in the decentralized finance ecosystem.</h5>
+                        <h5>Sonic's Risk Watch provides comprehensive insights into token risks, security vulnerabilities, and profitable opportunities in the decentralized finance ecosystem.</h5>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -68,7 +85,7 @@
     </main>
     <footer class="footer py-4 bg-dark">
         <span>Copyright © 2025</span>
-        <a href="https://twitter.com/yourhandle" target="_blank" class="text-white">
+        <a href="https://x.com/AuditOne_DAO" target="_blank" class="text-white">
             <img src="{{ url_for('static', filename='img/x-icon.png') }}" width="20" alt="Twitter">
         </a>
     </footer>
