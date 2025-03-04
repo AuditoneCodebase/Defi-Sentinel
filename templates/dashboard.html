@@ -12,7 +12,7 @@
                 <th>Avg APY</th>
                 <th>Security Score</th>
                 <th>Risk</th>
-                <th>IL Risk</th>
+                <th>Impermanent Loss</th>
                 <th>Total Pools</th>
                 <th>Hacks Reported</th>
                 <th>Action</th>
@@ -30,7 +30,9 @@
                 <td>{{ details.auditSecurityScore.total_score }}</td>
                 {%endif%}
                 <td>
-                    {% if details.tvlMetrics.predictedProbability > 70 %}
+                    {% if details.tvlMetrics.predictedProbability =="NA" %}
+                        <span class="badge bg-warning text-white">NA</span>
+                    {% elif details.tvlMetrics.predictedProbability > 70 %}
                         <span class="badge bg-danger text-white">High</span>
                     {% elif details.tvlMetrics.predictedProbability > 50 %}
                         <span class="badge bg-warning text-white">Medium</span>
@@ -39,8 +41,10 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if details.tvlMetrics.impermanentLossRisk > 0 %}
-                        <span class="badge bg-warning text-white">Yes</span>
+                    {% if details.tvlMetrics.impermanentLossRisk =="NA" %}
+                        <span class="badge bg-warning text-white">NA</span>
+                    {% elif details.tvlMetrics.impermanentLossRisk > 0 %}
+                        <span class="badge bg-danger text-white">Yes</span>
                     {% else %}
                         <span class="badge bg-success text-white">No</span>
                     {% endif %}

@@ -1,4 +1,8 @@
 import requests
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Mapping of supported chains and their corresponding explorers
 CHAIN_API_BASE_URLS = {

@@ -11,7 +11,12 @@ def get_symbol_metrics(symbol):
     :param symbol: The symbol of the token to assess.
     :return: JSON containing all combined metrics for the given symbol.
     """
-    filtered_pools = list(collection.find({"symbol": symbol}))
+    filtered_pools = list(collection.find({
+        "symbol": {
+            "$regex": symbol,  # Substring to search for
+            "$options": "i"  # "i" = case-insensitive
+        }
+    }))
 
     if not filtered_pools:
         return json.dumps({"error": f"No data found for symbol {symbol}"}, indent=4)
@@ -28,7 +33,11 @@ def get_symbol_metrics(symbol):
 
     for pool in filtered_pools:
         total_tvl += pool.get("tvlUsd", 0)
-        total_apy += pool.get("apyBase", 0)
+        apy_base = pool.get("apyBase")
+        if apy_base is None:
+            apy_base = 0
+        total_apy += apy_base
+
         total_sigma += pool.get("sigma", 0)
         total_il_risk += 1 if pool.get("ilRisk", "no") == "yes" else 0
         total_volume_1d += pool.get("volumeUsd1d", 0) or 0
@@ -58,5 +67,3 @@ def get_symbol_metrics(symbol):
     }
 
     return json.dumps(output, indent=4)
-
-

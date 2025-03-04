@@ -8,7 +8,6 @@ CMC_API_KEY = os.getenv("CMC_API")
 CMC_QUOTE_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest"
 CMC_INFO_URL = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/info"
 
-
 def safe_get(data, key):
     """Safely fetch a key from a dictionary, handling empty lists and missing keys."""
     value = data.get(key, [])
@@ -17,7 +16,6 @@ def safe_get(data, key):
     if isinstance(value, str):  # If it's already a string, return it
         return value
     return "N/A"  # Default return for missing or empty values
-
 
 def fetch_single_token_data(symbol):
     """

@@ -7,7 +7,12 @@ projects = {
     "Solv Protocol":"SOLVBTC",
     "Hey Anon":"ANON",
     "Wagmi":"WAGMI",
-    "Yel Finance":"YEL"
+    "Yel Finance":"YEL",
+    "Silo Finance":"SILO",
+    "Beets":"BEETS",
+    "Shadow":"SHADOW",
+    "Eggs Finance": "EGGS",
+    "Equalizer Exchange":"EQUAL"
 }
 
 def fetch_complete_data():
@@ -51,6 +56,3 @@ def fetch_complete_data():
         }
 
     return json.dumps(combined_data, indent=4)
-
-
-

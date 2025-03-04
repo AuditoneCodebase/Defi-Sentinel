@@ -18,7 +18,7 @@ def fetch_sonic_tvl():
             data = response.json()["data"]
 
             # Filter for Sonic chain pools
-            sonic_pools = [pool for pool in data if pool.get("chain") == "Sonic"]
+            sonic_pools = [pool for pool in data]
 
             if not sonic_pools:
                 print("No Sonic pools found.")
@@ -26,7 +26,7 @@ def fetch_sonic_tvl():
 
             for pool in sonic_pools:
                 pool["_id"] = str(uuid.uuid4().hex)  # Assign unique UUID
-                db.tvlSonicProjects.update_one({"_id": pool["_id"]}, {"$set": pool}, upsert=True)
+                db.tvlProjects.update_one({"_id": pool["_id"]}, {"$set": pool}, upsert=True)
 
             print(f"Inserted {len(sonic_pools)} Sonic pools into MongoDB.")
 
@@ -35,4 +35,3 @@ def fetch_sonic_tvl():
 
     except requests.exceptions.RequestException as e:
         print("Error fetching TVL data:", str(e))
-

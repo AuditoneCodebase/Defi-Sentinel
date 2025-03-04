@@ -1,52 +1,138 @@
 {% extends "base.html" %}
 
-{% block title %}My Tokens - Sonic's Risk Switch {% endblock %}
+{% block title %}My Tokens - Sonic's Risk Switch{% endblock %}
 {% block tokens_active %}active{% endblock %}
 
 {% block content %}
-    <!-- Tokens Table -->
-    <table class="table table-striped table-bordered mt-4">
-        <thead class="bg-dark text-white">
+<!-- Tokens Table -->
+<table class="table table-striped table-bordered mt-4">
+    <thead class="bg-dark text-white">
+        <tr>
+            <th>Project (% holdings)</th>
+            <th>TVL (USD)</th>
+            <th>Avg APY</th>
+            <th>Security Score</th>
+            <th>Risk</th>
+            <th>Impermanent Loss</th>
+            <th>Total Pools</th>
+            <th>Hacks Reported</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody id="my-tokens-data">
+        {% if message %}
             <tr>
-                <th>Symbol</th>
-                <th>Balance</th>
-                <th>USD Price</th>
-                <th>APY (%)</th>
-                <th>Audit Security Score</th>
-                <th>Past Hacks</th>
-                <th>Total TVL (USD)</th>
-                <th>Impermanent Loss Risk</th>
-                <th>Action</th>
+                <td colspan="9">
+                    {{ message }}
+                </td>
             </tr>
-        </thead>
-        <tbody id="my-tokens-data">
-            {% if message %}
-                <tr><td colspan="9"> You do not held any tokens on chain and if you would like to analyse a specific token, check out Analyze token section </td></tr>
-            {% elif data|length == 0 %}
-                <tr><td colspan="9">You have no tokens.</td></tr>
-            {% else %}
-                {% for token_symbol, token_info in data.items() %}
-                    <tr>
-                        <td>{{ token_info.tokenSymbol }}</td>
-                        <td>{{ token_info.balance }}</td>
-                        <td>{{ token_info.usdPrice if token_info.usdPrice != 'NA' else 'NA' }}</td>
-                        <td>{{ token_info.apy if token_info.apy != 'NA' else 'NA' }}%</td>
-                        <td>{{ token_info.auditSecurityScore if token_info.auditSecurityScore != 'NA' else 'NA' }}</td>
-                        <td>{{ token_info.pastHacks if token_info.pastHacks != 'NA' else 'NA' }}</td>
-                        <td>{{ token_info.tvlMetrics.totalTvl if token_info.tvlMetrics.totalTvl != 'NA' else 'NA' }}</td>
-                        <td>
-                            {% if token_info.tvlMetrics.impermanentLossRisk != 'NA' %}
-                                {{ token_info.tvlMetrics.impermanentLossRisk }}%
-                            {% else %}
-                                NA
-                            {% endif %}
-                        </td>
-                        <td>
-                    <a href="{{ url_for('get_report', project_name=project) }}" target="_blank" class="btn btn-sm btn-dark">📄 View Report</a></td>
-                    </tr>
-                {% endfor %}
-            {% endif %}
-        </tbody>
-    </table>
+        {% elif data|length == 0 %}
+            <tr>
+                <td colspan="9">
+                    You have no tokens. If you want to analyze a specific token,
+                    please visit the "Analyze Token" section.
+                </td>
+            </tr>
+        {% else %}
+            {% for token_symbol, token_info in data.items() %}
+                <tr>
+                    <!-- 1. Project (% holdings) -->
+                    <td>
+                        {{ token_info.tokenSymbol }}
+                        {% if token_info.percentOfPortfolio is defined and token_info.percentOfPortfolio != 'NA' %}
+                            ({{ token_info.percentOfPortfolio }})
+                        {% else %}
+                            (NA)
+                        {% endif %}
+                    </td>
 
+                    <!-- 2. TVL (USD) -->
+                    <td>
+                        {% if token_info.tvlMetrics.totalTvl != 'NA' %}
+                            {{ token_info.tvlMetrics.totalTvl }}
+                        {% else %}
+                            NA
+                        {% endif %}
+                    </td>
+
+                    <!-- 3. Avg APY -->
+                    <td>
+                        {% if token_info.tvlMetrics.avgApy != 'NA' %}
+                            {{ token_info.tvlMetrics.avgApy }}%
+                        {% else %}
+                            NA
+                        {% endif %}
+                    </td>
+
+                    <!-- 4. Security Score -->
+                    <td>
+                        {% set score = token_info.auditSecurityScore.total_score %}
+                        {% if score != 0 and score != 'NA' %}
+                            {{ score }}
+                        {% else %}
+                            NA
+                        {% endif %}
+                    </td>
+
+                    <!-- 5. Risk -->
+                    <td>
+                        {% if token_info.risk is defined and token_info.risk != 'NA' %}
+                            {{ token_info.risk }}
+                        {% else %}
+                            NA
+                        {% endif %}
+                    </td>
+
+                    <!-- 6. Impermanent Loss -->
+                    <td>
+                        {% if token_info.tvlMetrics.impermanentLossRisk != 'NA' %}
+                            {{ token_info.tvlMetrics.impermanentLossRisk }}%
+                        {% else %}
+                            NA
+                        {% endif %}
+                    </td>
+
+                    <!-- 7. Total Pools -->
+                    <td>
+                        {% if token_info.tvlMetrics.numPools != 'NA' %}
+                            {{ token_info.tvlMetrics.numPools }}
+                        {% else %}
+                            NA
+                        {% endif %}
+                    </td>
+
+                    <!-- 8. Hacks Reported -->
+                    <td>
+                        {#
+                           If "pastHacks" is simply "Yes"/"No", we can display that directly.
+                           If it's a dictionary with "slowmist" and "rekt_news" fields,
+                           continue the logic from your original code.
+                        #}
+
+                        {% if token_info.pastHacks == "Yes" %}
+                            <span class="badge bg-danger text-white">Yes</span>
+                        {% elif token_info.pastHacks == "No" %}
+                            <span class="badge bg-success text-white">No</span>
+                        {% else %}
+                            {# fallback to old logic if it's a dict #}
+                            {% if token_info.pastHacks.slowmist.message == "No hacks found"
+                               and token_info.pastHacks.rekt_news.message == "No hacks found" %}
+                                <span class="badge bg-success text-white">No</span>
+                            {% else %}
+                                <span class="badge bg-danger text-white">Yes</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+
+                    <!-- 9. Action -->
+                    <td>
+                        <a class="btn btn-sm btn-dark text-white">
+                            📄 View Report
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+    </tbody>
+</table>
 {% endblock %}
