@@ -6,7 +6,6 @@ load_dotenv()
 
 # Mapping of supported chains and their corresponding explorers
 CHAIN_API_BASE_URLS = {
-    "base": "https://api.basescan.org/api",
     "sonic": "https://api.sonicscan.org/api"
 }
 
@@ -73,4 +72,3 @@ def get_tokens_held(chain, wallet_address, api_key):
         tokens[token_contract]["balance"] += value  # Add balance from multiple transactions
 
     return list(tokens.values())  # Convert dict to list of dicts
-

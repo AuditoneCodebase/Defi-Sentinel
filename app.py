@@ -115,7 +115,7 @@ def get_report(project_name):
 @login_required
 def my_tokens():
     # Fetch the data
-    data = fetch_user_and_project_data("sonic", session["wallet_address"], os.getenv("SONIC_API_KEY"))
+    data = fetch_user_and_project_data("sonic", "0x81cfF587caFc10dbf094AC04E19e3B0a854E8147", os.getenv("SONIC_API_KEY"))
 
     # Check if data is a string (i.e., JSON string)
     if isinstance(data, str):

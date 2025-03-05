@@ -135,4 +135,3 @@ def fetch_user_and_project_data(chain, wallet_address, api_key):
 
     return json.dumps(combined_data, indent=4)
 
-#print(fetch_user_and_project_data("sonic","0x79bbF4508B1391af3A0F4B30bb5FC4aa9ab0E07C",os.getenv("SONIC_API_KEY")))
