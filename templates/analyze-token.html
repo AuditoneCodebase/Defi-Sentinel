@@ -1,25 +1,73 @@
 {% extends "base.html" %}
 
-{% block title %}Analyze Token - Sonic's Risk Switch {% endblock %}
+{% block title %}Analyze Token - Sonic's Risk Switch{% endblock %}
 {% block analyze_active %}active{% endblock %}
 
 {% block content %}
-    <input type="text" id="token-symbol" placeholder="Enter Token Symbol">
-    <button id="analyze-btn">Analyze</button>
-    <div id="analysis-result"></div>
 
-    <script>
+<div class="container mt-2">
+
+    <!-- Neumorphic Form Card -->
+            <label for="token-dropdown" class="form-label"><b>Select a Token:</b></label>
+            <div class="input-group mb-3">
+                <select id="token-dropdown" class="custom-select">
+                    <option value="" selected disabled>Choose a token...</option>
+                    {% for name, symbol in combined_tokens.items() %}
+                        <option value="{{ symbol }}">{{ name }} ({{ symbol }})</option>
+                    {% endfor %}
+                </select>
+                <div class="input-group-append">
+                    <button id="analyze-btn" class="btn btn-primary">Analyze</button>
+                </div>
+            </div>
+
+    <!-- Report Section -->
+    <div id="analysis-result" class="mt-4"></div>
+</div>
+
+<script>
+    $(document).ready(function () {
         $("#analyze-btn").click(function () {
-            let symbol = $("#token-symbol").val().trim();
+            let symbol = $("#token-dropdown").val();
             if (symbol) {
+                $("#analysis-result").html(`
+                    <div class="text-center mt-3">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p>Fetching Report...</p>
+                    </div>
+                `);
+
                 $.get("/analyze-token/" + symbol, function (data) {
-                    let result = data.error ? `<p>${data.error}</p>` : `
-                        <p><b>Risk Score:</b> ${data.riskScore}</p>
-                        <p><b>Volatility:</b> ${data.volatility}</p>
-                    `;
-                    $("#analysis-result").html(result);
+                    if (data.error) {
+                        $("#analysis-result").html(`<div class="alert alert-danger">${data.error}</div>`);
+                    } else {
+                        $("#analysis-result").html(`
+                            <div class="card shadow-soft border-light p-3 mt-3">
+                                <div class="card-header bg-dark text-white">
+                                    <h4>Analysis Report for ${symbol}</h4>
+                                </div>
+                                <div class="card-body">
+                                    <p><b>Risk Score:</b> ${data.riskScore}</p>
+                                    <p><b>Volatility:</b> ${data.volatility}</p>
+                                    <p><b>Liquidity Risk:</b> ${data.liquidityRisk}</p>
+                                    <p><b>Market Sentiment:</b> ${data.marketSentiment}</p>
+                                    <hr>
+                                    <h5>Security & Risk Report:</h5>
+                                    <div class="p-3 bg-light border rounded">
+                                        ${data.reportContent}
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    }
+                }).fail(function () {
+                    $("#analysis-result").html(`<div class="alert alert-danger">Failed to fetch report. Please try again.</div>`);
                 });
+            } else {
+                $("#analysis-result").html(`<div class="alert alert-warning">Please select a token.</div>`);
             }
         });
-    </script>
+    });
+</script>
+
 {% endblock %}

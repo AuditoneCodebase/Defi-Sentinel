@@ -1,64 +1,89 @@
 {% extends "base.html" %}
 
-{% block title %}Agent Choice - Sonic's Risk Switch {% endblock %}
+{% block title %}Agent Choice - Sonic's Risk Switch{% endblock %}
 {% block agent_active %}active{% endblock %}
+
 {% block content %}
-    <!-- Protocols Table -->
-    <table class="table table-striped table-bordered mt-4" >
+
+    <table class="table table-striped table-bordered mt-4">
         <thead class="bg-dark text-white">
             <tr>
                 <th>Project</th>
-                <th>TVL (USD)</th>
-                <th>Avg APY</th>
                 <th>Security Score</th>
-                <th>Risk</th>
-                <th>Impermanent Loss</th>
-                <th>Total Pools</th>
+                <th>Risk Level</th>
+                <th>Market Sentiment</th>
+                <th>Price (USD)</th>
+                <th>Volume (24h)</th>
+                <th>Buy/Sell Ratio</th>
                 <th>Hacks Reported</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
-            {% for project, details in protocols.items() %}
+            {% for details in protocols %}
             <tr>
-                <td>{{ details.auditSecurityScore.project_name }}</td>
-                <td>${{ details.tvlMetrics.totalTvl }}</td>
-                <td>{{ details.tvlMetrics.avgApy }}%</td>
-                {%if details.auditSecurityScore.total_score == 0%}
-                <td>NA</td>
-                {%else%}
-                <td>{{ details.auditSecurityScore.total_score }}</td>
-                {%endif%}
+                <td>{{ details.auditSecurityScore.project_name | default("NA") }}</td>
+
+                <!-- Security Score -->
                 <td>
-                    {% if details.tvlMetrics.predictedProbability =="NA" %}
-                        <span class="badge bg-warning text-white">NA</span>
-                    {% elif details.tvlMetrics.predictedProbability > 70 %}
-                        <span class="badge bg-danger text-white">High</span>
-                    {% elif details.tvlMetrics.predictedProbability > 50 %}
-                        <span class="badge bg-warning text-white">Medium</span>
+                    {% if details.auditSecurityScore.total_score | default(0) == 0 %}
+                        <span class="btn btn-sm bg-secondary text-white">NA</span>
                     {% else %}
-                        <span class="badge bg-success">Low</span>
+                        <span class="btn btn-sm bg-primary">{{ details.auditSecurityScore.total_score }}</span>
                     {% endif %}
                 </td>
+
+                <!-- Risk Level -->
                 <td>
-                    {% if details.tvlMetrics.impermanentLossRisk =="NA" %}
-                        <span class="badge bg-warning text-white">NA</span>
-                    {% elif details.tvlMetrics.impermanentLossRisk > 0 %}
-                        <span class="badge bg-danger text-white">Yes</span>
+                    {% if details.tokenStats.liquidity_risk | default("NA") == "NA" %}
+                        <span class="btn btn-sm bg-warning text-white">NA</span>
+                    {% elif details.tokenStats.liquidity_risk == "High" %}
+                        <span class="btn btn-sm bg-danger text-white">High</span>
+                    {% elif details.tokenStats.liquidity_risk == "Medium" %}
+                        <span class="btn btn-sm bg-warning text-white">Medium</span>
                     {% else %}
-                        <span class="badge bg-success text-white">No</span>
+                        <span class="btn btn-sm bg-success text-white">Low</span>
                     {% endif %}
                 </td>
-                <td>{{ details.tvlMetrics.numPools }}</td>
+
+                <!-- Market Sentiment -->
                 <td>
-                    {% if details.pastHacks.slowmist.message == "No hacks found" and details.pastHacks.rekt_news.message == "No hacks found" %}
-                        <span class="badge bg-success text-white">No</span>
+                    {% if details.tokenStats.market_sentiment | default("NA") == "Bearish" %}
+                        <span class="btn btn-sm bg-danger text-white">Bearish</span>
+                    {% elif details.tokenStats.market_sentiment == "Bullish" %}
+                        <span class="btn btn-sm bg-success text-white">Bullish</span>
                     {% else %}
-                        <span class="badge bg-danger text-white">Yes</span>
+                        <span class="btn btn-sm bg-secondary text-white">NA</span>
                     {% endif %}
                 </td>
+
+                <!-- Price in USD -->
+                <td>${{ details.tokenStats.price_usd | default("NA") }}</td>
+
+                <!-- Total Volume 24h -->
+                <td>${{ details.tokenStats.total_volume_24h | default("NA") }}</td>
+
+                <!-- Buy/Sell Ratio -->
                 <td>
-                    <a href="{{ url_for('get_report', project_name=project) }}" target="_blank" class="btn btn-sm btn-dark">📄 View Report</a>
+                    {% if details.tokenStats.buy_sell_ratio | default("NA") == "NA" %}
+                        <span class="btn btn-sm bg-warning text-white">NA</span>
+                    {% else %}
+                        {{ details.tokenStats.buy_sell_ratio }}
+                    {% endif %}
+                </td>
+
+                <!-- Hacks Reported -->
+                <td>
+                    {% if details.pastHacks.slowmist.message | default("No hacks found") == "No hacks found" and details.pastHacks.rekt_news.message | default("No hacks found") == "No hacks found" %}
+                        <span class="btn btn-sm bg-success text-white">No</span>
+                    {% else %}
+                        <span class="btn btn-sm bg-danger text-white">Yes</span>
+                    {% endif %}
+                </td>
+
+                <!-- View Report Button -->
+                <td>
+                    <a class="btn btn-sm btn-dark text-white">Report</a>
                 </td>
             </tr>
             {% endfor %}

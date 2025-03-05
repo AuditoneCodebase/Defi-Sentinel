@@ -6,17 +6,16 @@ from web3 import Web3
 import datetime
 import uuid
 import functools
-from assessment.agent_choice import fetch_complete_data
-from assessment.user_tokens import fetch_user_and_project_data
+from assessment.calculation import dashboard_stats
+from core.fetch_user_tokens import get_tokens_held
+from assessment.agent_choice import project_list
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import markdown2
 import json
 
-
 load_dotenv()
-
 
 app = Flask(__name__)
 CORS(app)
@@ -84,20 +83,17 @@ def store_wallet():
             "access_times": [datetime.datetime.utcnow()]
         })
 
-    return jsonify({"message": "Wallet address stored", "redirect": "/dashboard"})
+    return jsonify({"message": "Wallet address stored", "redirect": "/my-tokens"})
 
 
-# **Get Stored Wallet Address**
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    protocols_data = fetch_complete_data()  # Example function fetching the data
-
-    if isinstance(protocols_data, str):  # Convert if it's a JSON string
-        import json
-        protocols_data = json.loads(protocols_data)
-
-    return render_template("dashboard.html", protocols=protocols_data)
+    protocols_data = []
+    for name,symbol in project_list.items():
+        protocol_stats = dashboard_stats(name,symbol)
+        protocols_data.append(protocol_stats)
+    return render_template("dashboard.html",protocols=protocols_data)
 
 
 @app.route("/get-report/<project_name>", methods=["GET"])
@@ -114,31 +110,32 @@ def get_report(project_name):
 @app.route("/my-tokens")
 @login_required
 def my_tokens():
-    # Fetch the data
-    data = fetch_user_and_project_data("sonic", "0x81cfF587caFc10dbf094AC04E19e3B0a854E8147", os.getenv("SONIC_API_KEY"))
-
-    # Check if data is a string (i.e., JSON string)
-    if isinstance(data, str):
-        tokens_data = json.loads(data)
+    user_tokens = get_tokens_held("sonic",session["wallet_address"],os.getenv("SONIC_API_KEY"))
+    if type(user_tokens)==dict:
+        return render_template("my-tokens.html",message="error")
     else:
-        tokens_data = data
-
-    # Check for errors in the data
-    if "error" in tokens_data:
-        return render_template("my-tokens.html", message="error")
-
-    # Render template with the token data
-    return render_template("my-tokens.html", data=tokens_data)
-
+        protocols_data = []
+        for protocol in user_tokens:
+            protocol_stats = dashboard_stats(protocol["name"],protocol["symbol"])
+            protocols_data.append(protocol_stats)
+        return render_template("my-tokens.html",protocols=protocols_data)
 
 @app.route("/analyze-token")
 @login_required
 def analyze_token():
-    return render_template("analyze-token.html")
+    # Merge `projects_list` and `user_tokens` without duplicates
+    combined_tokens = {name: symbol for name, symbol in project_list.items()}  # Add all projects
+    user_tokens = get_tokens_held("sonic", session["wallet_address"], os.getenv("SONIC_API_KEY"))
+    if type(user_tokens) == dict:
+        pass
+    else:
+        for token in user_tokens:
+            combined_tokens[token["name"]] = token["symbol"]  # Ensure user-selected tokens are included
+    return render_template("analyze-token.html", combined_tokens=combined_tokens)
 
 @app.route("/about-us")
 def about_us():
     return render_template("about-us.html")
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(host="0.0.0.0", port=8000, debug=True)
