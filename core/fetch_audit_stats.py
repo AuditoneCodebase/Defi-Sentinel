@@ -1,3 +1,4 @@
+# without zerepy
 from utils.db_client import client
 db = client["agentDatabase"]
 
