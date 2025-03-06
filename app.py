@@ -112,7 +112,7 @@ def get_report(project_name):
 def my_tokens():
     user_tokens = get_tokens_held("sonic",session["wallet_address"],os.getenv("SONIC_API_KEY"))
     print(user_tokens)
-    if len(user_tokens)==0:
+    if len(user_tokens)==0 or type(user_tokens)==dict:
         return render_template("my-tokens.html",message="error")
     else:
         protocols_data = []
