@@ -79,7 +79,7 @@
 
                 <!-- Hacks Reported -->
                 <td>
-                    {% if details.pastHacks.slowmist.message | default("No hacks found") == "No hacks found" and details.pastHacks.rekt_news.message | default("No hacks found") == "No hacks found" %}
+                    {% if details.pastHacks.slowmist.message == "No hacks found" and details.pastHacks.rekt_news.message %}
                         <span class="btn btn-sm bg-success text-white">No</span>
                     {% else %}
                         <span class="btn btn-sm bg-danger text-white">Yes</span>

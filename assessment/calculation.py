@@ -1,6 +1,7 @@
 from core.fetch_audit_stats import audit_data
 from core.fetch_past_hacks import hacks_data
 from core.fetch_token_stats import stats_by_symbol
+from core.fetch_security_stats import stats_by_project
 import json
 def dashboard_stats(project_name,symbol):
     """
@@ -11,10 +12,12 @@ def dashboard_stats(project_name,symbol):
     """
 
     # Fetch audit/security score
-    audit_security_score = audit_data(project_name)
+    security_stats = stats_by_project(project_name)
+
+    audit_security_score = security_stats["audit_data"]
 
     # Fetch hack history
-    hack_data = hacks_data(project_name)
+    hack_data = security_stats["hacks_data"]
 
     # Fetch token stats
     token_stats = stats_by_symbol(symbol)
@@ -39,5 +42,3 @@ def dashboard_stats(project_name,symbol):
     }
 
     return project_data
-
-#print(dashboard_stats("Metropolis Token","METRO"))
