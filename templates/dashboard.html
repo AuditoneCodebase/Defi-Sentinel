@@ -27,7 +27,7 @@
                 <!-- Security Score -->
                 <td>
                     {% if details.auditSecurityScore.total_score | default(0) == 0 %}
-                        <span class="btn btn-sm bg-secondary text-white">NA</span>
+                        <span class="btn btn-sm bg-secondary text-white">0</span>
                     {% else %}
                         <span class="btn btn-sm bg-primary">{{ details.auditSecurityScore.total_score }}</span>
                     {% endif %}
