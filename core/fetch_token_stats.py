@@ -83,7 +83,12 @@ def stats_by_symbol(symbol):
 
     # Determine Market Sentiment
     if isinstance(buy_sell_ratio, float):
-        market_sentiment = "Bearish" if buy_sell_ratio < 1 else "Bullish"
+        if buy_sell_ratio < 0.5:
+            market_sentiment = "Bearish"
+        elif 0.51 <= buy_sell_ratio <= 1.5:
+            market_sentiment = "Neutral"
+        else:  # buy_sell_ratio > 1.5
+            market_sentiment = "Bullish"
     else:
         market_sentiment = "N/A"
 

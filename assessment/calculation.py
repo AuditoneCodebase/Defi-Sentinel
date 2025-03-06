@@ -39,3 +39,5 @@ def dashboard_stats(project_name,symbol):
     }
 
     return project_data
+
+#print(dashboard_stats("Metropolis Token","METRO"))

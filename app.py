@@ -111,7 +111,8 @@ def get_report(project_name):
 @login_required
 def my_tokens():
     user_tokens = get_tokens_held("sonic",session["wallet_address"],os.getenv("SONIC_API_KEY"))
-    if type(user_tokens)==dict:
+    print(user_tokens)
+    if len(user_tokens)==0:
         return render_template("my-tokens.html",message="error")
     else:
         protocols_data = []
@@ -133,7 +134,6 @@ def analyze_token():
             combined_tokens[token["name"]] = token["symbol"]  # Ensure user-selected tokens are included
     session["combined_tokens"] = combined_tokens
     return render_template("analyze-token.html", combined_tokens=combined_tokens)
-
 
 
 @app.route("/about-us")
