@@ -66,9 +66,9 @@ def stats_by_symbol(symbol):
 
     # Determine Liquidity Risk Level
     if isinstance(liquidity_risk, float):
-        if liquidity_risk < 0.1:
+        if liquidity_risk < 0.001:
             liquidity_risk_level = "High"
-        elif 0.1 <= liquidity_risk < 0.3:
+        elif 0.001 <= liquidity_risk < 0.01:
             liquidity_risk_level = "Medium"
         else:
             liquidity_risk_level = "Low"

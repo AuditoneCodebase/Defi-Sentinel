@@ -131,7 +131,10 @@ def analyze_token():
     else:
         for token in user_tokens:
             combined_tokens[token["name"]] = token["symbol"]  # Ensure user-selected tokens are included
+    session["combined_tokens"] = combined_tokens
     return render_template("analyze-token.html", combined_tokens=combined_tokens)
+
+
 
 @app.route("/about-us")
 def about_us():

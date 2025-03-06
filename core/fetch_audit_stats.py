@@ -92,7 +92,7 @@ def audit_data(project_name):
         "project_name": project_name,
         "audited_by": audited_by,
         "total_audits": total_audits,
-        "total_score": round(total_score, 2)
+        "total_score": int(total_score)
     }
 
 

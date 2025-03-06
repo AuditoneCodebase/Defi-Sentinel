@@ -5,14 +5,14 @@
 
 {% block content %}
 {%if message %}
-    <h5>You do not seem to hold any tokens on sonic network. Check out Analyse Token section if you are interested in analysing specific tokens</h5>
+<h5>You do not seem to hold any tokens on sonic network. Check out <span class="btn btn-sm bg-white text-dark"><a href="/analyze-token">🔍 Analyze Token</a></span> if you are interested in analysing specific tokens</h5>
 {%else%}
     <table class="table table-striped table-bordered mt-4">
         <thead class="bg-dark text-white">
             <tr>
                 <th>Project</th>
                 <th>Security Score</th>
-                <th>Risk Level</th>
+                <th>Liquidity Risk</th>
                 <th>Market Sentiment</th>
                 <th>Price (USD)</th>
                 <th>Volume (24h)</th>
