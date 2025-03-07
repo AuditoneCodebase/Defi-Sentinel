@@ -47,14 +47,14 @@ def login_required(f):
     @functools.wraps(f)
     def wrap(*args, **kwargs):
         if "wallet_address" not in session:
-            return jsonify({"error": "Unauthorized access"})
+            return redirect(url_for("index"))
         return f(*args, **kwargs)
 
     return wrap
 
 
 # **Render the Frontend**
-@app.route("/")
+@app.route("/connect-wallet")
 def index():
     return render_template("index.html")
 
@@ -86,8 +86,8 @@ def store_wallet():
     return jsonify({"message": "Wallet address stored", "redirect": "/my-tokens"})
 
 
-@app.route("/dashboard")
-@login_required
+@app.route("/")
+#@login_required
 def dashboard():
     protocols_data = []
     for name,symbol in project_list.items():
