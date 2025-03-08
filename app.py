@@ -8,11 +8,13 @@ import uuid
 import functools
 from assessment.calculation import dashboard_stats
 from core.fetch_user_tokens import get_tokens_held
+from core.generate_report import analyze_defi_project
 from assessment.agent_choice import project_list, project_for_dashboard
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import markdown2
+import urllib.parse
 import json
 
 load_dotenv()
@@ -122,19 +124,28 @@ def my_tokens():
             protocols_data.append(protocol_stats)
         return render_template("my-tokens.html",protocols=protocols_data)
 
+
 @app.route("/analyze-token")
 @login_required
 def analyze_token():
-    # Merge `projects_list` and `user_tokens` without duplicates
-    combined_tokens = {name: symbol for name, symbol in project_list.items()}  # Add all projects
+    """
+    Fetch tokens and display the analysis page.
+    """
+    if "wallet_address" not in session:
+        return redirect(url_for("login"))
+
+    combined_tokens = {name: symbol for name, symbol in project_list.items()}
+
     user_tokens = get_tokens_held("sonic", session["wallet_address"], os.getenv("SONIC_API_KEY"))
-    if len(user_tokens)==0 or type(user_tokens)==dict:
-        pass
-    else:
+
+    # Ensure `user_tokens` is iterable
+    if isinstance(user_tokens, list) and len(user_tokens) > 0:
         for token in user_tokens:
-            combined_tokens[token["name"]] = token["symbol"]  # Ensure user-selected tokens are included
+            combined_tokens[token["name"]] = token["symbol"]
+
     session["combined_tokens"] = combined_tokens
     return render_template("analyze-token.html", combined_tokens=combined_tokens)
+
 
 def validate_payment(tx_hash):
     """
@@ -146,12 +157,20 @@ def validate_payment(tx_hash):
     except Exception:
         return {"status": "failed", "reason": "Transaction not found."}
 
-    if receipt["status"] != 1 or tx["to"].lower() != RECIPIENT_ADDRESS.lower() or tx["value"] < SONIC_NATIVE_TOKEN_COST:
-        return {"status": "failed", "reason": "Invalid payment."}
+    if not receipt or receipt["status"] != 1:
+        return {"status": "failed", "reason": "Transaction failed or not confirmed."}
+
+    if tx["to"].lower() != RECIPIENT_ADDRESS.lower():
+        return {"status": "failed", "reason": "Transaction was sent to the wrong address."}
+
+    if tx["value"] < SONIC_NATIVE_TOKEN_COST:
+        return {"status": "failed", "reason": "Insufficient payment amount."}
 
     return {"status": "success", "sender": tx["from"], "tx_hash": tx_hash}
 
+
 @app.route("/process-payment", methods=["POST"])
+@login_required
 def process_payment():
     """
     Handles payment verification.
@@ -169,30 +188,45 @@ def process_payment():
     else:
         return jsonify({"error": validation["reason"]}), 400
 
-@app.route("/generate-report/<symbol>", methods=["GET"])
-def generate_report(symbol):
+
+@app.route("/generate-report/<name>", methods=["GET"])
+@login_required
+def generate_report(name):
     """
     Generates a risk analysis report only if payment is confirmed.
     """
     if not session.get("payment_verified"):
         return jsonify({"error": "Payment required before analysis."}), 403
 
-    # Mock analysis result
+    user_id = session.get("wallet_address", "unknown_user")
+
+    combined_list = session["combined_tokens"]
+
+    encoded_name = urllib.parse.unquote(name)
+
+    data = dashboard_stats(encoded_name,combined_list[encoded_name])
+
+    ai_report = analyze_defi_project(data)["result"]
+
+    report_html = markdown2.markdown(ai_report)
+
+    # Generate report data
     report_data = {
-        "token": symbol,
-        "riskScore": "Medium",
-        "volatility": "High",
-        "liquidityRisk": "Low",
-        "marketSentiment": "Bullish",
-        "reportContent": f"Analysis report for {symbol}: This token has medium risk, high volatility, and low liquidity risk.",
-        "userId": session["wallet_address"],
-        "createdAt":datetime.datetime.utcnow()
+        "_id":uuid.uuid4().hex,
+        "protocol": name,
+        "symbol":combined_list[encoded_name],
+        "reportContent": report_html,
+        "userId": user_id,
+        "createdAt": datetime.datetime.utcnow()
     }
 
     # Store in MongoDB
     db.reports.insert_one(report_data)
 
-    return jsonify(report_data)
+    session.pop("payment_verified", None)
+
+    return jsonify({"message": "Report generated successfully.", "report": report_data})
+
 
 @app.route("/my-reports")
 @login_required

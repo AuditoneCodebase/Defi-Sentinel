@@ -5,67 +5,6 @@
 
 {% block content %}
 
-<div class="container mt-2">
-    <p class="text-muted">View all your previously analyzed tokens.</p>
-    {% if reports %}
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered mt-3">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Token</th>
-                        <th>Risk Score</th>
-                        <th>Volatility</th>
-                        <th>Liquidity Risk</th>
-                        <th>Market Sentiment</th>
-                        <th>Report</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for report in reports %}
-                        <tr>
-                            <td><b>{{ report.token }}</b></td>
-                            <td>{{ report.riskScore }}</td>
-                            <td>{{ report.volatility }}</td>
-                            <td>{{ report.liquidityRisk }}</td>
-                            <td>{{ report.marketSentiment }}</td>
-                            <td>
-                                <button class="btn btn-info btn-sm" onclick="viewReport('{{ report.token }}', '{{ report.reportContent }}')">
-                                    View
-                                </button>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% else %}
-        <p class="alert alert-warning">No reports found.</p>
-    {% endif %}
-</div>
-
-<!-- Report Modal -->
-<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="reportModalLabel">Analysis Report</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="reportContent"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    function viewReport(token, content) {
-        document.getElementById('reportModalLabel').innerText = "Report for " + token;
-        document.getElementById('reportContent').innerHTML = "<p>" + content + "</p>";
-        var myModal = new bootstrap.Modal(document.getElementById('reportModal'));
-        myModal.show();
-    }
-</script>
+Coming soon
 
 {% endblock %}
