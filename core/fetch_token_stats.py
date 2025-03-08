@@ -96,7 +96,7 @@ def stats_by_symbol(symbol):
     return {
         "token": token_data.get("token", symbol),
         "price_usd": price_usd,
-        "total_volume_24h": total_volume_24h,
+        "total_volume_24h": f"{total_volume_24h:,.0f}",
         "liquidity_ratio": round(liquidity_risk,2),
         "liquidity_risk": liquidity_risk_level,
         "buy_sell_ratio": round(buy_sell_ratio,2),
