@@ -114,15 +114,41 @@ def get_report(project_name):
 @app.route("/my-tokens")
 @login_required
 def my_tokens():
-    user_tokens = get_tokens_held("sonic",session["wallet_address"],os.getenv("SONIC_API_KEY"))
-    if len(user_tokens)==0 or type(user_tokens)==dict:
-        return render_template("my-tokens.html",message="error")
-    else:
-        protocols_data = []
-        for protocol in user_tokens:
-            protocol_stats = dashboard_stats(protocol["name"],protocol["symbol"])
-            protocols_data.append(protocol_stats)
-        return render_template("my-tokens.html",protocols=protocols_data)
+    """
+    Fetches the user's tokens, retrieves their dashboard stats,
+    and calculates the percentage of holdings in the portfolio.
+    """
+    user_tokens = get_tokens_held("sonic", session["wallet_address"], os.getenv("SONIC_API_KEY"))
+
+    if not user_tokens or isinstance(user_tokens, dict):
+        return render_template("my-tokens.html", message="No tokens found or an error occurred.")
+
+    protocols_data = []
+    total_portfolio_value = 0
+
+    # Fetch all details from dashboard_stats in one loop
+    for token in user_tokens:
+        protocol_stats = dashboard_stats(token["name"], token["symbol"])
+
+        # Extract price and calculate token's value in USD
+        token_price = protocol_stats.get("tokenStats", {}).get("price_usd", 0)
+        token_value = token["balance"] * token_price
+
+        # Store processed data
+        token["value_usd"] = round(token_value, 2)
+        token["price_usd"] = round(token_price, 4)
+        token["contract_address"] = token["contract_address"]
+        total_portfolio_value += token_value  # Update total holdings value
+        # Merge dashboard_stats data directly into token dictionary
+        token.update(protocol_stats)
+        protocols_data.append(token)
+    # Calculate percentage holdings
+    for token in protocols_data:
+        if total_portfolio_value > 0:
+            token["holding_percent"] = round((token["value_usd"] / total_portfolio_value) * 100, 2)
+        else:
+            token["holding_percent"] = 0
+    return render_template("my-tokens.html", protocols=protocols_data, total_value=round(total_portfolio_value, 2))
 
 
 @app.route("/analyze-token")
@@ -133,18 +159,15 @@ def analyze_token():
     """
     if "wallet_address" not in session:
         return redirect(url_for("login"))
-
     combined_tokens = {name: symbol for name, symbol in project_list.items()}
-
     user_tokens = get_tokens_held("sonic", session["wallet_address"], os.getenv("SONIC_API_KEY"))
-
     # Ensure `user_tokens` is iterable
     if isinstance(user_tokens, list) and len(user_tokens) > 0:
         for token in user_tokens:
             combined_tokens[token["name"]] = token["symbol"]
-
     session["combined_tokens"] = combined_tokens
-    return render_template("analyze-token.html", combined_tokens=combined_tokens)
+    reports = list(db.reports.find({"userId": session["wallet_address"]}, {"_id": 0}))
+    return render_template("analyze-token.html", combined_tokens=combined_tokens, reports=reports)
 
 
 def validate_payment(tx_hash):
@@ -156,16 +179,12 @@ def validate_payment(tx_hash):
         receipt = WEB3.eth.get_transaction_receipt(tx_hash)
     except Exception:
         return {"status": "failed", "reason": "Transaction not found."}
-
     if not receipt or receipt["status"] != 1:
         return {"status": "failed", "reason": "Transaction failed or not confirmed."}
-
     if tx["to"].lower() != RECIPIENT_ADDRESS.lower():
         return {"status": "failed", "reason": "Transaction was sent to the wrong address."}
-
     if tx["value"] < SONIC_NATIVE_TOKEN_COST:
         return {"status": "failed", "reason": "Insufficient payment amount."}
-
     return {"status": "success", "sender": tx["from"], "tx_hash": tx_hash}
 
 
@@ -177,10 +196,8 @@ def process_payment():
     """
     data = request.json
     tx_hash = data.get("txHash")
-
     if not tx_hash:
         return jsonify({"error": "Transaction hash required"}), 400
-
     validation = validate_payment(tx_hash)
     if validation["status"] == "success":
         session["payment_verified"] = True
@@ -197,19 +214,12 @@ def generate_report(name):
     """
     if not session.get("payment_verified"):
         return jsonify({"error": "Payment required before analysis."}), 403
-
     user_id = session.get("wallet_address", "unknown_user")
-
     combined_list = session["combined_tokens"]
-
     encoded_name = urllib.parse.unquote(name)
-
     data = dashboard_stats(encoded_name,combined_list[encoded_name])
-
     ai_report = analyze_defi_project(data)["result"]
-
     report_html = markdown2.markdown(ai_report)
-
     # Generate report data
     report_data = {
         "_id":uuid.uuid4().hex,
@@ -219,23 +229,19 @@ def generate_report(name):
         "userId": user_id,
         "createdAt": datetime.datetime.utcnow()
     }
-
     # Store in MongoDB
     db.reports.insert_one(report_data)
-
     session.pop("payment_verified", None)
-
     return jsonify({"message": "Report generated successfully.", "report": report_data})
 
 
-@app.route("/my-reports")
+@app.route("/my-agent-flows")
 @login_required
-def my_reports():
+def my_agent_flows():
     """
-    Fetch all reports for the user.
+    Fetch all agent flows and swaps executed for user
     """
-    reports = list(db.reports.find({"userId":session["wallet_address"]}, {"_id": 0}))  # Hide MongoDB _id field
-    return render_template("my-reports.html", reports=reports)
+    return render_template("my-agent-flows.html")
 
 @app.route("/log-out")
 @login_required

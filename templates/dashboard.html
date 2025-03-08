@@ -12,7 +12,7 @@
                 <th>Security Score</th>
                 <th>Liquidity Risk</th>
                 <th>Market Sentiment</th>
-                <th>Price (USD)</th>
+                <th>Market Cap (USD)</th>
                 <th>Volume (24h)</th>
                 <th>Buy/Sell Ratio</th>
                 <th>Security Incidents</th>
@@ -60,7 +60,7 @@
                 </td>
 
                 <!-- Price in USD -->
-                <td>${{ details.tokenStats.price_usd | default("NA") }}</td>
+                <td>${{ details.tokenStats.total_market_cap | default("NA") }}</td>
 
                 <!-- Total Volume 24h -->
                 <td>${{ details.tokenStats.total_volume_24h | default("NA") }}</td>

@@ -15,18 +15,18 @@ SPAM_TOKENS = [
     "0xspamtokencontract2..."
 ]
 
-# Minimum balance threshold to filter small airdrops (set to 1 as default)
-MIN_BALANCE_THRESHOLD = 1
+# Minimum balance threshold to filter small airdrops (set to 0.01 as default)
+MIN_BALANCE_THRESHOLD = 0.01
 
 def get_tokens_held(chain, wallet_address, api_key):
     """
-    Fetches ERC-20 tokens held by a wallet on a specified chain (Base or Sonic),
-    excluding airdrops and transactions with `input: deprecated`, while aggregating balances.
+    Fetches only the actual ERC-20 tokens held by a wallet on Sonic,
+    excluding transactions and ensuring accurate balances.
 
-    :param chain: The blockchain to query ('base' or 'sonic').
+    :param chain: The blockchain to query ('sonic').
     :param wallet_address: The wallet address to check.
     :param api_key: The API key for the blockchain explorer.
-    :return: A list of token balances.
+    :return: A list of token balances the user actually holds.
     """
     if chain not in CHAIN_API_BASE_URLS:
         return {"error": "Unsupported chain"}
@@ -44,32 +44,35 @@ def get_tokens_held(chain, wallet_address, api_key):
         return {"error": data.get("message", "Unknown error")}
 
     tokens = {}
+
     for tx in data["result"]:
         sender = tx["from"].lower()
+        receiver = tx["to"].lower()
         token_contract = tx["contractAddress"].lower()
         token_name = tx["tokenName"]
         token_symbol = tx["tokenSymbol"]
         value = int(tx["value"]) / (10 ** int(tx["tokenDecimal"]))
 
-        # **Filter Conditions**
-        if sender == "0x0000000000000000000000000000000000000000":  # Exclude minting from zero address
-            continue
-        if token_contract in SPAM_TOKENS:  # Exclude known spam tokens
-            continue
-        if value < MIN_BALANCE_THRESHOLD:  # Ignore tiny airdrops
+        # **Ignore spam tokens**
+        if token_contract in SPAM_TOKENS:
             continue
 
-
-        # **Aggregate token balances**
+        # **Initialize token if not already in dictionary**
         if token_contract not in tokens:
             tokens[token_contract] = {
                 "name": token_name,
                 "symbol": token_symbol,
                 "contract_address": token_contract,
-                "balance": 0  # Initialize balance to 0
+                "balance": 0
             }
 
-        tokens[token_contract]["balance"] += value  # Add balance from multiple transactions
+        # **Add balance if received, subtract if sent**
+        if receiver == wallet_address.lower():
+            tokens[token_contract]["balance"] += value
+        elif sender == wallet_address.lower():
+            tokens[token_contract]["balance"] -= value
 
-    return list(tokens.values())  # Convert dict to list of dicts
+    # **Filter out tokens with zero or negative balance**
+    filtered_tokens = [token for token in tokens.values() if token["balance"] > MIN_BALANCE_THRESHOLD]
 
+    return filtered_tokens  # Return only tokens the user actually holds

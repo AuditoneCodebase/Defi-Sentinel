@@ -4,20 +4,27 @@
 {% block tokens_active %}active{% endblock %}
 
 {% block content %}
-{%if message %}
-<h5>You do not seem to hold any tokens on sonic network. Check out <span class="btn btn-sm bg-white text-dark"><a href="/analyze-token">🔍 Analyze Token</a></span> if you are interested in analysing specific tokens</h5>
-{%else%}
+{% if message %}
+    <h5>You do not seem to hold any tokens on the Sonic network. Check out
+        <span class="btn btn-sm bg-white text-dark">
+            <a href="/analyze-token">🔍 Analyze Token</a>
+        </span>
+        if you are interested in analyzing specific tokens.
+    </h5>
+{% else %}
+    <p class="text-muted">📊 <b>Total Portfolio Value:</b> ${{ total_value | round(2) }}</p>
+
     <table class="table table-striped table-bordered mt-4">
         <thead class="bg-dark text-white">
             <tr>
                 <th>Project</th>
+                <th>% Holdings</th>
                 <th>Security Score</th>
                 <th>Liquidity Risk</th>
                 <th>Market Sentiment</th>
                 <th>Price (USD)</th>
                 <th>Volume (24h)</th>
                 <th>Buy/Sell Ratio</th>
-                <th>Security Incidents</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -27,10 +34,16 @@
             <tr>
                 <td><b>{{ details.auditSecurityScore.project_name | default("NA") }}</b></td>
 
+                <td>
+                    <span class="btn btn-sm bg-info text-white">
+                        {{ details.holding_percent | round(2) }}%
+                    </span>
+                </td>
+
                 <!-- Security Score -->
                 <td>
                     {% if details.auditSecurityScore.total_score | default(0) == 0 %}
-                        <span class="btn btn-sm bg-secondary text-white">NA</span>
+                        <span class="btn btn-sm bg-secondary text-white">00</span>
                     {% else %}
                         <span class="btn btn-sm bg-primary">{{ details.auditSecurityScore.total_score }}</span>
                     {% endif %}
@@ -77,41 +90,58 @@
                     {% endif %}
                 </td>
 
-                <!-- Hacks Reported -->
-                <td>
-                    {% if details.pastHacks.slowmist.message == "No hacks found" and details.pastHacks.rekt_news.message %}
-                        <span class="btn btn-sm bg-success text-white">No</span>
-                    {% else %}
-                        <span class="btn btn-sm bg-danger text-white">Yes</span>
-                    {% endif %}
-                </td>
-
                 <!-- View Report Button -->
                 <td>
-                    <a class="btn btn-sm btn-dark text-white">Report</a>
+                    <button class="btn btn-sm btn-dark text-white" onclick="viewReport('{{ details.auditSecurityScore.project_name }}')">
+                        View Details
+                    </button>
                 </td>
             </tr>
             {% endfor %}
         </tbody>
-
     </table>
-{%endif%}
-    <!-- Report Modal -->
-    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title" id="reportModalLabel">Project Report</h5>
-                    <button type="button" class="btn-close btn-light" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="report-content">Loading...</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
+{% endif %}
+
+<!-- Report Modal -->
+<div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="reportModalLabel">Project Report</h5>
+                <button type="button" class="btn-close btn-light" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="report-content">Loading...</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+    function viewReport(projectName) {
+        document.getElementById("reportModalLabel").innerText = "Report for " + projectName;
+        document.getElementById("report-content").innerHTML = "<p>Fetching report...</p>";
+
+        fetch(`/fetch-report/${projectName}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.reportContent) {
+                    document.getElementById("report-content").innerHTML = data.reportContent;
+                } else {
+                    document.getElementById("report-content").innerHTML = "<p>Report not found.</p>";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching report:", error);
+                document.getElementById("report-content").innerHTML = "<p>Error loading report.</p>";
+            });
+
+        var myModal = new bootstrap.Modal(document.getElementById("reportModal"));
+        myModal.show();
+    }
+</script>
 
 {% endblock %}

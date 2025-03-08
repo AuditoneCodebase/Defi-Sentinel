@@ -28,7 +28,8 @@ def dashboard_stats(project_name,symbol):
             "liquidity_ratio": "NA",
             "liquidity_risk": "NA",
             "buy_sell_ratio": "NA",
-            "market_sentiment": "NA"
+            "market_sentiment": "NA",
+            "total_market_cap":"NA"
         }
 
     # Combine all data
@@ -40,3 +41,4 @@ def dashboard_stats(project_name,symbol):
     }
 
     return project_data
+
