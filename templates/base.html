@@ -79,9 +79,9 @@
 
 
 <!-- Main Content -->
-<main class="container col-md-10">
+<main class="container col-md-12">
     <div class="row justify-content-center">
-        <div class="col-lg-12">
+        <div class="col-lg-11">
             <div class="card bg-primary shadow-soft border-light p-4">
                 <ul class="nav nav-pills mb-3 " id="pills-tab" role="tablist">
                     <li class="nav-item" role="presentation">
@@ -97,8 +97,17 @@
                            href="{{ url_for('analyze_token') }}" role="tab">🔍 Analyze Token</a>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link {% block about_active %}{% endblock %}" id="tabs-text-3-tab"
-                           href="{{ url_for('about_us') }}" role="tab">🚀 About Us</a>
+                        <a class="nav-link {% block reports_active %}{% endblock %}" id="tabs-text-3-tab"
+                           href="{{ url_for('my_reports') }}" role="tab">📝 My Reports</a>
+                    </li>
+
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block zerepy_active %}{% endblock %}" id="tabs-text-4-tab"
+                           href="{{ url_for('zerepy_docs') }}" role="tab">🌐 ZerePy Server</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="tabs-text-5-tab"
+                           href="{{ url_for('log_out') }}" role="tab">⏻ Log out</a>
                     </li>
                     <li class="nav-item logo-item justify-content-center" role="presentation">by
                         <a href="https://auditone.io" target="_blank">

@@ -10,3 +10,11 @@ project_list = {
     "Eggs Finance": "EGGS",
     "Equalizer Exchange": "EQUAL"
 }
+
+project_for_dashboard = {
+    "Solv Protocol": "SOLV",
+    "Silo Finance": "SILO",
+    "Wagmi": "WAGMI",
+    "Metropolis Token": "METRO",
+    "Shadow": "SHADOW"
+}

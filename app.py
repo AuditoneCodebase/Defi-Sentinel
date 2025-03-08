@@ -8,7 +8,7 @@ import uuid
 import functools
 from assessment.calculation import dashboard_stats
 from core.fetch_user_tokens import get_tokens_held
-from assessment.agent_choice import project_list
+from assessment.agent_choice import project_list, project_for_dashboard
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
@@ -27,15 +27,43 @@ Session(app)
 
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 db = client["agentDatabase"]
-users = db["users"]
+users = db["users_sonic"]
 
-# Web3 Configuration for Base Network
-BASE_RPC_URL = "https://mainnet.base.org"
-AUDIT_TOKEN_CONTRACT = "0xYourAuditTokenContractAddress"
-AUDIT_TOKEN_DECIMALS = 18
-WEB3 = Web3(Web3.HTTPProvider(BASE_RPC_URL))
-AUDIT_TOKEN_COST = Web3.to_wei(1, "ether")  # Cost: 1 AUDIT tokens
-ACCESS_DURATION = 30  # Days to allow access after payment
+
+SONIC_RPC_URL = "https://rpc.soniclabs.com"  # Replace with actual RPC URL
+WEB3 = Web3(Web3.HTTPProvider(SONIC_RPC_URL))
+
+# Required payment amount in native Sonic tokens
+SONIC_NATIVE_TOKEN_COST = WEB3.to_wei(1, "ether")  # Example: 1 Sonic token required
+
+# Payment recipient address (your address)
+RECIPIENT_ADDRESS = "0x5A8eF3672fFAc8007ce2d025cebEbBAFb7F6e01B"  # Replace with your Sonic wallet address
+
+
+def validate_payment(tx_hash):
+    """
+    Validates if the transaction is successful and meets the payment criteria.
+    """
+    try:
+        tx = WEB3.eth.get_transaction(tx_hash)
+        receipt = WEB3.eth.get_transaction_receipt(tx_hash)
+    except Exception as e:
+        return {"status": "failed", "reason": f"Transaction not found: {str(e)}"}
+
+    # Ensure the transaction was successful
+    if receipt["status"] != 1:
+        return {"status": "failed", "reason": "Transaction failed"}
+
+    # Check if the transaction was sent to the correct recipient
+    if tx["to"].lower() != RECIPIENT_ADDRESS.lower():
+        return {"status": "failed", "reason": "Incorrect recipient address"}
+
+    # Check if the transaction amount is sufficient
+    if tx["value"] < SONIC_NATIVE_TOKEN_COST:
+        return {"status": "failed", "reason": "Insufficient amount sent"}
+
+    # Payment is valid
+    return {"status": "success", "sender": tx["from"], "tx_hash": tx_hash}
 
 # Register the custom markdown filter
 @app.template_filter('markdown')
@@ -90,7 +118,7 @@ def store_wallet():
 #@login_required
 def dashboard():
     protocols_data = []
-    for name,symbol in project_list.items():
+    for name,symbol in project_for_dashboard.items():
         protocol_stats = dashboard_stats(name,symbol)
         protocols_data.append(protocol_stats)
     return render_template("dashboard.html",protocols=protocols_data)
@@ -121,6 +149,26 @@ def my_tokens():
             protocols_data.append(protocol_stats)
         return render_template("my-tokens.html",protocols=protocols_data)
 
+
+@app.route("/process-payment", methods=["POST"])
+def process_payment():
+    """
+    Endpoint to validate payment transaction before generating the report.
+    """
+    data = request.json
+    tx_hash = data.get("txHash")
+
+    if not tx_hash:
+        return jsonify({"error": "Transaction hash required"}), 400
+
+    validation = validate_payment(tx_hash)
+
+    if validation["status"] == "success":
+        return jsonify({"success": True, "message": "Payment verified!"})
+    else:
+        return jsonify({"error": validation["reason"]}), 400
+
+
 @app.route("/analyze-token")
 @login_required
 def analyze_token():
@@ -135,10 +183,26 @@ def analyze_token():
     session["combined_tokens"] = combined_tokens
     return render_template("analyze-token.html", combined_tokens=combined_tokens)
 
-
-@app.route("/about-us")
-def about_us():
+@app.route("/my-reports")
+def my_reports():
     return render_template("about-us.html")
+
+@app.route("/log-out")
+def log_out():
+    session.clear()
+    return redirect(url_for("dashboard"))
+
+# Function to read and convert Markdown to HTML using markdown2
+def get_markdown_content(filepath):
+    with open(filepath, "r", encoding="utf-8") as f:
+        content = f.read()
+    return markdown2.markdown(content)
+
+@app.route("/zerepy-docs")
+def zerepy_docs():
+    zerepy_content = get_markdown_content("zerepy_docs.md")
+    return render_template("zerepy-docs.html",zerepy_content=zerepy_content)
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)

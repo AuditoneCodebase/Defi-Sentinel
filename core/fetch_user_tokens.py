@@ -72,3 +72,4 @@ def get_tokens_held(chain, wallet_address, api_key):
         tokens[token_contract]["balance"] += value  # Add balance from multiple transactions
 
     return list(tokens.values())  # Convert dict to list of dicts
+

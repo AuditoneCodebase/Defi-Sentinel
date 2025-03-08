@@ -102,3 +102,4 @@ def stats_by_symbol(symbol):
         "buy_sell_ratio": round(buy_sell_ratio,2),
         "market_sentiment": market_sentiment
     }
+
