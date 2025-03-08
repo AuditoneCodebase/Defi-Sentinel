@@ -34,36 +34,11 @@ SONIC_RPC_URL = "https://rpc.soniclabs.com"  # Replace with actual RPC URL
 WEB3 = Web3(Web3.HTTPProvider(SONIC_RPC_URL))
 
 # Required payment amount in native Sonic tokens
-SONIC_NATIVE_TOKEN_COST = WEB3.to_wei(1, "ether")  # Example: 1 Sonic token required
+SONIC_NATIVE_TOKEN_COST = WEB3.to_wei(0.5, "ether")  # Example: 0.5 Sonic token required
 
 # Payment recipient address (your address)
 RECIPIENT_ADDRESS = "0x5A8eF3672fFAc8007ce2d025cebEbBAFb7F6e01B"  # Replace with your Sonic wallet address
 
-
-def validate_payment(tx_hash):
-    """
-    Validates if the transaction is successful and meets the payment criteria.
-    """
-    try:
-        tx = WEB3.eth.get_transaction(tx_hash)
-        receipt = WEB3.eth.get_transaction_receipt(tx_hash)
-    except Exception as e:
-        return {"status": "failed", "reason": f"Transaction not found: {str(e)}"}
-
-    # Ensure the transaction was successful
-    if receipt["status"] != 1:
-        return {"status": "failed", "reason": "Transaction failed"}
-
-    # Check if the transaction was sent to the correct recipient
-    if tx["to"].lower() != RECIPIENT_ADDRESS.lower():
-        return {"status": "failed", "reason": "Incorrect recipient address"}
-
-    # Check if the transaction amount is sufficient
-    if tx["value"] < SONIC_NATIVE_TOKEN_COST:
-        return {"status": "failed", "reason": "Insufficient amount sent"}
-
-    # Payment is valid
-    return {"status": "success", "sender": tx["from"], "tx_hash": tx_hash}
 
 # Register the custom markdown filter
 @app.template_filter('markdown')
@@ -77,7 +52,6 @@ def login_required(f):
         if "wallet_address" not in session:
             return redirect(url_for("index"))
         return f(*args, **kwargs)
-
     return wrap
 
 
@@ -139,7 +113,6 @@ def get_report(project_name):
 @login_required
 def my_tokens():
     user_tokens = get_tokens_held("sonic",session["wallet_address"],os.getenv("SONIC_API_KEY"))
-    print(user_tokens)
     if len(user_tokens)==0 or type(user_tokens)==dict:
         return render_template("my-tokens.html",message="error")
     else:
@@ -149,11 +122,39 @@ def my_tokens():
             protocols_data.append(protocol_stats)
         return render_template("my-tokens.html",protocols=protocols_data)
 
+@app.route("/analyze-token")
+@login_required
+def analyze_token():
+    # Merge `projects_list` and `user_tokens` without duplicates
+    combined_tokens = {name: symbol for name, symbol in project_list.items()}  # Add all projects
+    user_tokens = get_tokens_held("sonic", session["wallet_address"], os.getenv("SONIC_API_KEY"))
+    if len(user_tokens)==0 or type(user_tokens)==dict:
+        pass
+    else:
+        for token in user_tokens:
+            combined_tokens[token["name"]] = token["symbol"]  # Ensure user-selected tokens are included
+    session["combined_tokens"] = combined_tokens
+    return render_template("analyze-token.html", combined_tokens=combined_tokens)
+
+def validate_payment(tx_hash):
+    """
+    Validate if the transaction meets payment requirements.
+    """
+    try:
+        tx = WEB3.eth.get_transaction(tx_hash)
+        receipt = WEB3.eth.get_transaction_receipt(tx_hash)
+    except Exception:
+        return {"status": "failed", "reason": "Transaction not found."}
+
+    if receipt["status"] != 1 or tx["to"].lower() != RECIPIENT_ADDRESS.lower() or tx["value"] < SONIC_NATIVE_TOKEN_COST:
+        return {"status": "failed", "reason": "Invalid payment."}
+
+    return {"status": "success", "sender": tx["from"], "tx_hash": tx_hash}
 
 @app.route("/process-payment", methods=["POST"])
 def process_payment():
     """
-    Endpoint to validate payment transaction before generating the report.
+    Handles payment verification.
     """
     data = request.json
     tx_hash = data.get("txHash")
@@ -162,32 +163,48 @@ def process_payment():
         return jsonify({"error": "Transaction hash required"}), 400
 
     validation = validate_payment(tx_hash)
-
     if validation["status"] == "success":
+        session["payment_verified"] = True
         return jsonify({"success": True, "message": "Payment verified!"})
     else:
         return jsonify({"error": validation["reason"]}), 400
 
+@app.route("/generate-report/<symbol>", methods=["GET"])
+def generate_report(symbol):
+    """
+    Generates a risk analysis report only if payment is confirmed.
+    """
+    if not session.get("payment_verified"):
+        return jsonify({"error": "Payment required before analysis."}), 403
 
-@app.route("/analyze-token")
-@login_required
-def analyze_token():
-    # Merge `projects_list` and `user_tokens` without duplicates
-    combined_tokens = {name: symbol for name, symbol in project_list.items()}  # Add all projects
-    user_tokens = get_tokens_held("sonic", session["wallet_address"], os.getenv("SONIC_API_KEY"))
-    if type(user_tokens) == dict:
-        pass
-    else:
-        for token in user_tokens:
-            combined_tokens[token["name"]] = token["symbol"]  # Ensure user-selected tokens are included
-    session["combined_tokens"] = combined_tokens
-    return render_template("analyze-token.html", combined_tokens=combined_tokens)
+    # Mock analysis result
+    report_data = {
+        "token": symbol,
+        "riskScore": "Medium",
+        "volatility": "High",
+        "liquidityRisk": "Low",
+        "marketSentiment": "Bullish",
+        "reportContent": f"Analysis report for {symbol}: This token has medium risk, high volatility, and low liquidity risk.",
+        "userId": session["wallet_address"],
+        "createdAt":datetime.datetime.utcnow()
+    }
+
+    # Store in MongoDB
+    db.reports.insert_one(report_data)
+
+    return jsonify(report_data)
 
 @app.route("/my-reports")
+@login_required
 def my_reports():
-    return render_template("about-us.html")
+    """
+    Fetch all reports for the user.
+    """
+    reports = list(db.reports.find({"userId":session["wallet_address"]}, {"_id": 0}))  # Hide MongoDB _id field
+    return render_template("my-reports.html", reports=reports)
 
 @app.route("/log-out")
+@login_required
 def log_out():
     session.clear()
     return redirect(url_for("dashboard"))
