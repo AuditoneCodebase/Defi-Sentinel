@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}Sonic's Risk Switch {% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+    <!-- CSS -->
+    <link type="text/css" href="{{ url_for('static', filename='css/neumorphism.css') }}" rel="stylesheet">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        html, body {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background-color: #f8f9fa;
+        }
+        .container {
+            flex: 1;
+            padding: 20px;
+        }
+        .footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #222;
+            color: white;
+            align-items: center;
+            position: fixed;
+            bottom: 0;
+        }
+        .icon-heading {
+          display: flex;           /* enables flex layout */
+          align-items: center;     /* vertical centering within the container */
+          gap: 8px;                /* small space between icon and text (optional) */
+        }
+
+        .icon-img {
+          width: 40px;
+          height: 40px;
+        }
+        .custom-nav {
+          display: flex;
+          align-items: center;      /* vertically center items if different heights */
+        }
+
+        .logo-item {
+          margin-left: auto;        /* pushes this item to the far right */
+        }
+        .scrollable-content {
+            max-height: 80vh; /* Adjust height to fit screen */
+            overflow-y: auto;
+            padding: 15px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Header -->
+<div class="text-center py-4 bg-dark text-white">
+        <h1 class="icon-heading justify-content-center">
+          <img
+            src="/static/img/favicon.png"
+            alt="Icon"
+            class="icon-img"
+          > Sonic's Risk Watch
+        </h1>
+        <p class="lead">Your trusted agent for analyzing risks and opportunities in DeFi tokens and protocols</p>
+</div>
+
+
+<!-- Main Content -->
+<main class="container col-md-12">
+    <div class="row justify-content-center">
+        <div class="col-lg-11">
+            <div class="card bg-primary shadow-soft border-light p-4">
+                <ul class="nav nav-pills mb-3 " id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block agent_active %}{% endblock %}" id="tabs-text-0-tab"
+                           href="{{ url_for('dashboard') }}" role="tab">🔥 Agent Choice</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block tokens_active %}{% endblock %}" id="tabs-text-1-tab"
+                           href="{{ url_for('my_tokens') }}" role="tab">📜 My Tokens</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block analyze_active %}{% endblock %}" id="tabs-text-2-tab"
+                           href="{{ url_for('analyze_token') }}" role="tab">🔍 Analyze Token</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block agent_flows_active %}{% endblock %}" id="tabs-text-3-tab"
+                           href="{{ url_for('my_agent_flows') }}" role="tab">🤖 My Agent Flows</a>
+                    </li>
+
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link {% block zerepy_active %}{% endblock %}" id="tabs-text-4-tab"
+                           href="{{ url_for('zerepy_docs') }}" role="tab">🌐 ZerePy Server</a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="tabs-text-5-tab"
+                           href="{{ url_for('log_out') }}" role="tab">⏻ Log out</a>
+                    </li>
+                    <li class="nav-item logo-item justify-content-center" role="presentation">by
+                        <a href="https://auditone.io" target="_blank">
+                          <img src="/static/img/auditone.png"
+                               alt="Logo"
+                               style="height: auto; width: 200px; vertical-align: middle;" />
+                        </a>
+                      </li>
+                </ul>
+                <hr>
+                {%block content%}{% endblock %}
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="footer py-4 bg-dark">
+    <span>Copyright © AuditOne 2025 | Sonic's Risk Watch</span>
+    <a href="https://x.com/AuditOne_DAO" target="_blank" class="text-white">
+        <img src="{{ url_for('static', filename='img/x-icon.png') }}" width="20" alt="Twitter">
+    </a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-rbsA1Gz5zyz3F1LGa4gF5OjgHnOspD8p5zvFWJ0lQQsIq9Jk2sx5F8V6Z5tMyu0w" crossorigin="anonymous"></script>
+
+</body>
+</html>

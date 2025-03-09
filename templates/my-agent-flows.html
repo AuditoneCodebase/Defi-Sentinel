@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Agent Flows - Sonic's Risk Watch{% endblock %}
+{% block agent_flows_active %}active{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Automated Agent Flow</h2>
+    <p>Set up your agent to automatically rebalance your portfolio based on security score preferences.</p>
+
+    <form id="agent-form" class="mt-3">
+        <div class="row align-items-end">
+            <div class="col-md-4">
+                <label for="target-security-score" class="form-label">Target Security Score (%)</label>
+                <input type="number" class="form-control" id="target-security-score" name="target_security_score" min="0" max="100" required>
+            </div>
+            <div class="col-md-4">
+                <label for="top-n" class="form-label">Number of Top Secure Tokens to Allocate Into</label>
+                <input type="number" class="form-control" id="top-n" name="top_n" min="1" required>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Save Agent Flow</button>
+            </div>
+        </div>
+    </form>
+
+    <div id="agent-response" class="mt-4"></div>
+
+    <hr>
+
+    <h3>My Agent Flows</h3>
+    {% if agent_flows %}
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Target Security Score</th>
+                    <th>Top Tokens</th>
+                    <th>Created At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flow in agent_flows %}
+                <tr>
+                    <td>{{ flow.target_security_score }}</td>
+                    <td>{{ flow.top_n }}</td>
+                    <td>{{ flow.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td><button class="btn btn-success execute-flow" data-id="{{ flow._id }}">Execute</button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No agent flows found.</p>
+    {% endif %}
+
+    <h3>Executed Flows</h3>
+    {% if executed_swaps %}
+        <table class="table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>Executed At</th>
+                    <th>Original Holdings</th>
+                    <th>New Holdings</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for swap in executed_swaps %}
+                <tr>
+                    <td>{{ swap.executed_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <ul>
+                            {% for token in swap.original_holdings %}
+                            <li>
+                                <strong>{{ token.name }} ({{ token.symbol }})</strong> -
+                                {{ token.holding_percent|round(2) }}%
+                                ({{ token.balance|round(4) }} @ ${{ token.price_usd|round(4) }})
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <ul>
+                            {% for token in swap.new_holdings %}
+                            <li>
+                                <strong>{{ token.name }} ({{ token.symbol }})</strong> -
+                                {{ token.holding_percent|round(2) }}%
+                                ({{ token.balance|round(4) }} @ ${{ token.price_usd|round(4) }})
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No swaps executed yet.</p>
+    {% endif %}
+
+
+
+<script>
+    document.getElementById("agent-form").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        let response = await fetch("/set-agent-flow", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                target_security_score: document.getElementById("target-security-score").value,
+                top_n: document.getElementById("top-n").value
+            })
+        });
+
+        let data = await response.json();
+        alert(data.message);
+        location.reload();
+    });
+
+    document.querySelectorAll(".execute-flow").forEach(button => {
+        button.addEventListener("click", function() {
+            let flowId = this.getAttribute("data-id");
+
+            // Create password input field
+            let container = document.createElement("div");
+            container.style.position = "fixed";
+            container.style.top = "50%";
+            container.style.left = "50%";
+            container.style.transform = "translate(-50%, -50%)";
+            container.style.background = "white";
+            container.style.padding = "30px"; // ✅ Increased padding for bigger size
+            container.style.width = "400px"; // ✅ Increased width
+            container.style.borderRadius = "12px"; // ✅ Softer corners
+            container.style.boxShadow = "0 6px 12px rgba(0,0,0,0.3)";
+            container.style.textAlign = "center";
+
+            let label = document.createElement("label");
+            label.innerText = "Enter Your Private Key:";
+            label.style.display = "block";
+            label.style.marginBottom = "10px";
+            label.style.fontSize = "16px"; // ✅ Increased font size
+
+            let input = document.createElement("input");
+            input.type = "password"; // ✅ Hidden input
+            input.placeholder = "Private Key";
+            input.classList.add("form-control");
+            input.style.width = "100%";
+            input.style.marginBottom = "15px";
+            input.style.fontSize = "14px";
+
+            let spinner = document.createElement("div");
+            spinner.classList.add("spinner-border", "text-primary");
+            spinner.style.display = "none"; // ✅ Initially hidden
+            spinner.style.margin = "15px auto";
+
+            let confirmBtn = document.createElement("button");
+            confirmBtn.innerText = "Confirm";
+            confirmBtn.classList.add("btn", "btn-primary", "mt-2");
+
+            let cancelBtn = document.createElement("button");
+            cancelBtn.innerText = "Cancel";
+            cancelBtn.classList.add("btn", "btn-secondary", "mt-2", "ms-2");
+
+            container.appendChild(label);
+            container.appendChild(input);
+            container.appendChild(spinner);
+            container.appendChild(confirmBtn);
+            container.appendChild(cancelBtn);
+            document.body.appendChild(container);
+            input.focus();
+
+            confirmBtn.addEventListener("click", async function() {
+                let privateKey = input.value;
+                if (!privateKey) {
+                    alert("Private key is required!");
+                    return;
+                }
+
+                // Disable confirm button and show spinner
+                confirmBtn.disabled = true;
+                spinner.style.display = "block";
+
+                let response = await fetch("/execute-agent-flow", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ flow_id: flowId, private_key: privateKey })
+                });
+
+                let data = await response.json();
+                alert(data.message);
+
+                // Remove input container after request
+                document.body.removeChild(container);
+                location.reload();
+            });
+
+            cancelBtn.addEventListener("click", function() {
+                document.body.removeChild(container);
+            });
+        });
+    });
+</script>
+
+
+</div>
+{% endblock %}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sonic's Risk Switch - Connect Wallet</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+    <!-- CSS -->
+    <link type="text/css" href="{{ url_for('static', filename='css/neumorphism.css') }}" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        .full-height-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .footer {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #222;
+            color: white;
+            align-items: center;
+        }
+        .icon-heading {
+          display: flex;           /* enables flex layout */
+          align-items: center;     /* vertical centering within the container */
+          gap: 8px;                /* small space between icon and text (optional) */
+        }
+
+        .icon-img {
+          width: 40px;
+          height: 40px;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="text-center py-4 bg-dark text-white">
+        <h1 class="icon-heading justify-content-center">
+          <img
+            src="/static/img/favicon.png"
+            alt="Icon"
+            class="icon-img"
+          > Sonic's Risk Watch
+        </h1>
+        <p class="lead">Your trusted agent for analyzing risks and opportunities in DeFi tokens and protocols</p>
+    </div>
+    <main class="full-height-container">
+        <div class="container">
+            <div class="row justify-content-center align-items-center">
+                <div class="col-md-6 d-flex align-items-center">
+                    <div>
+                        <h2>Navigate DeFi Safely</h2>
+                        <h5>Sonic's Risk Watch provides comprehensive insights into token risks, security vulnerabilities, and profitable opportunities in the decentralized finance ecosystem.</h5>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-primary shadow-soft border-light p-4">
+                        <div class="card-header text-center pb-0">
+                            <h2 class="h4">Connect Your Wallet</h2>
+                        </div>
+                        <div class="card-body text-center">
+                            <button id="connectWallet" class="btn btn-block btn-primary">
+                                <img src="{{ url_for('static', filename='img/metamask.png') }}" width="30" alt="MetaMask"> Connect with MetaMask
+                            </button>
+                            <p id="walletAddress" class="mt-3 text-light"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="footer py-4 bg-dark">
+        <span>Copyright © AuditOne 2025</span>
+        <a href="https://x.com/AuditOne_DAO" target="_blank" class="text-white">
+            <img src="{{ url_for('static', filename='img/x-icon.png') }}" width="20" alt="Twitter">
+        </a>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.getElementById('connectWallet').addEventListener('click', async () => {
+            if (window.ethereum) {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    const walletAddress = accounts[0];
+                    document.getElementById('walletAddress').textContent = `Connected: ${walletAddress}`;
+
+                    // Send wallet address to Flask backend to store in session
+                    fetch('/store-wallet', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ walletAddress })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.redirect) {
+                            window.location.href = data.redirect;  // Redirect to dashboard
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                } catch (error) {
+                    console.error('Wallet connection failed:', error);
+                    document.getElementById('walletAddress').textContent = 'Connection failed. Try again.';
+                }
+            } else {
+                alert('MetaMask not detected. Please install MetaMask to continue.');
+            }
+        });
+
+    </script>
+</body>
+</html>

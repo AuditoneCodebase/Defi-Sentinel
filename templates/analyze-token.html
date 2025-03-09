@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze Token - Sonic's Risk Watch{% endblock %}
+{% block analyze_active %}active{% endblock %}
+
+{% block content %}
+
+<div class="container mt-2">
+    <label for="token-dropdown" class="form-label"><b>Select a Token:</b></label>
+    <div class="input-group mb-3">
+        <select id="token-dropdown" class="custom-select">
+            {% for name, symbol in combined_tokens.items() %}
+                <option value="{{ name }}">{{ name }} ({{ symbol }})</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div id="wallet-status" class="mt-3"></div>
+
+    <div id="payment-section" class="mt-4" style="display: none;">
+        <button id="pay-with-metamask" class="btn btn-success">Pay 0.5 Sonic to Proceed</button>
+    </div>
+
+    <div id="payment-status" class="mt-3"></div>
+
+    <div id="analysis-section" class="mt-4" style="display: none;">
+        <button id="analyze-btn" class="btn btn-primary">Generate Report</button>
+        <div id="analysis-result" class="mt-3"></div>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/web3@1.7.3/dist/web3.min.js"></script>
+<script>
+    let userAccount = null;
+    let provider = window.ethereum;
+    const SONIC_CHAIN_ID = "0x92"; // 146 in hexadecimal
+    const RECIPIENT_ADDRESS = "0x5A8eF3672fFAc8007ce2d025cebEbBAFb7F6e01B"; // Your recipient wallet
+
+    async function checkWalletConnection() {
+        if (!provider) {
+            $("#wallet-status").html(`<div class="alert alert-danger">MetaMask not found. Install MetaMask to proceed.</div>`);
+            return;
+        }
+
+        try {
+            const accounts = await provider.request({ method: "eth_accounts" });
+            const currentChain = await provider.request({ method: "eth_chainId" });
+
+            if (accounts.length > 0) {
+                userAccount = accounts[0];
+
+                if (currentChain !== SONIC_CHAIN_ID) {
+                    await promptSwitchNetwork();
+                } else {
+                    $("#wallet-status").html(`<div class="alert alert-success">Connected: ${userAccount}</div>`);
+                    $("#payment-section").show();
+                }
+            } else {
+                $("#wallet-status").html(`<div class="alert alert-warning">Wallet not connected. Please connect.</div>`);
+                $("#payment-section").hide();
+            }
+        } catch (error) {
+            console.error("❌ Error checking wallet connection:", error);
+        }
+    }
+
+    async function promptSwitchNetwork() {
+        try {
+            await provider.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: SONIC_CHAIN_ID }]
+            });
+            console.log("✅ Switched to Sonic Network");
+        } catch (switchError) {
+            console.error("❌ Network switch error:", switchError);
+            $("#wallet-status").html(`<div class="alert alert-danger">Please switch to the Sonic Network manually.</div>`);
+        }
+    }
+
+    async function payWithMetaMask() {
+        if (!userAccount) {
+            $("#payment-status").html(`<div class="alert alert-warning">Please connect your wallet first.</div>`);
+            return;
+        }
+
+        let amountInWei = Web3.utils.toWei("0.5", "ether");
+
+        try {
+            let txHash = await provider.request({
+                method: "eth_sendTransaction",
+                params: [{
+                    from: userAccount,
+                    to: RECIPIENT_ADDRESS,
+                    value: Web3.utils.toHex(amountInWei),
+                    gas: Web3.utils.toHex(21000)
+                }]
+            });
+
+            $("#payment-status").html(`
+                <div class="alert alert-info">
+                    Transaction sent! Waiting for confirmation...<br>
+                    Tx Hash: <a href="https://sonic.explorer.io/tx/${txHash}" target="_blank">${txHash}</a>
+                </div>
+            `);
+
+            console.log(`🔍 Transaction ${txHash} sent. Waiting for mining...`);
+
+            // Wait 10 seconds before validating (give time for transaction to be mined)
+            setTimeout(async () => {
+                let validationResponse = await validatePayment(txHash);
+                if (validationResponse.success) {
+                    $("#payment-status").html(`<div class="alert alert-success">${validationResponse.message}</div>`);
+                    $("#analysis-section").show();
+                } else {
+                    $("#payment-status").html(`<div class="alert alert-danger">${validationResponse.error}</div>`);
+                }
+            }, 10000); // 10 seconds delay
+        } catch (error) {
+            console.error("❌ Payment transaction failed:", error);
+            $("#payment-status").html(`<div class="alert alert-danger">Transaction failed. Please try again.</div>`);
+        }
+    }
+
+    async function validatePayment(txHash) {
+        if (!txHash) {
+            console.error("❌ No transaction hash provided.");
+            return { success: false, error: "Transaction hash missing." };
+        }
+
+        console.log("🔍 Sending transaction hash for validation:", txHash);
+
+        try {
+            let response = await fetch("/process-payment", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ txHash: txHash }),
+            });
+
+            let data = await response.json();
+            if (response.ok) {
+                return { success: true, message: data.message };
+            } else {
+                console.error("❌ Validation error:", data);
+                return { success: false, error: data.error };
+            }
+        } catch (error) {
+            console.error("❌ Server validation request failed:", error);
+            return { success: false, error: "Failed to validate transaction." };
+        }
+    }
+
+    async function generateReport() {
+        let symbol = $("#token-dropdown").val();
+        if (!symbol) {
+            $("#analysis-result").html(`<div class="alert alert-warning">Please select a token.</div>`);
+            return;
+        }
+
+        $("#analysis-result").html(`
+            <div class="text-center mt-3">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p>Generating Report...</p>
+            </div>
+        `);
+
+        try {
+            let response = await fetch(`/generate-report/${symbol}`);
+            let data = await response.json();
+            console.log(data)
+
+            if (response.ok) {
+                $("#analysis-result").html(`
+                    <div class="card p-3 mt-3">
+                        <div class="card-header bg-dark text-white">
+                            <h4>Analysis Report for ${symbol}</h4>
+                        </div>
+                        <div class="card-body">
+                            <h5>Security & Risk Report:</h5>
+                            <div class="p-3 bg-light border rounded">
+                                ${data.report.reportContent}
+                            </div>
+                            <div class="alert alert-info mt-3"><b>Find in My Reports Section</b></div>
+                        </div>
+                    </div>
+                `);
+            } else {
+                $("#analysis-result").html(`<div class="alert alert-danger">${data.error}</div>`);
+            }
+        } catch (error) {
+            $("#analysis-result").html(`<div class="alert alert-danger">Failed to fetch report. Please try again.</div>`);
+        }
+    }
+
+    $(document).ready(function () {
+        checkWalletConnection();
+        $("#pay-with-metamask").click(payWithMetaMask);
+        $("#analyze-btn").click(generateReport);
+    });
+</script>
+{% endblock %}

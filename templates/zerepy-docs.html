@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}ZerePy Server - Sonic's Risk Switch{% endblock %}
+{% block zerepy_active %}active{% endblock %}
+
+{% block content %}
+    <div class="container mt-1">
+        <div class="content">
+            {{ zerepy_content | safe }}
+        </div>
+    </div>
+{% endblock %}
