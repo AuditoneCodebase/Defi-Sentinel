@@ -128,9 +128,9 @@
             container.style.left = "50%";
             container.style.transform = "translate(-50%, -50%)";
             container.style.background = "white";
-            container.style.padding = "30px"; // ✅ Increased padding for bigger size
-            container.style.width = "400px"; // ✅ Increased width
-            container.style.borderRadius = "12px"; // ✅ Softer corners
+            container.style.padding = "30px";
+            container.style.width = "400px";
+            container.style.borderRadius = "12px";
             container.style.boxShadow = "0 6px 12px rgba(0,0,0,0.3)";
             container.style.textAlign = "center";
 
@@ -138,10 +138,10 @@
             label.innerText = "Enter Your Private Key:";
             label.style.display = "block";
             label.style.marginBottom = "10px";
-            label.style.fontSize = "16px"; // ✅ Increased font size
+            label.style.fontSize = "16px";
 
             let input = document.createElement("input");
-            input.type = "password"; // ✅ Hidden input
+            input.type = "password";
             input.placeholder = "Private Key";
             input.classList.add("form-control");
             input.style.width = "100%";
@@ -150,7 +150,7 @@
 
             let spinner = document.createElement("div");
             spinner.classList.add("spinner-border", "text-primary");
-            spinner.style.display = "none"; // ✅ Initially hidden
+            spinner.style.display = "none";
             spinner.style.margin = "15px auto";
 
             let confirmBtn = document.createElement("button");
@@ -161,7 +161,16 @@
             cancelBtn.innerText = "Cancel";
             cancelBtn.classList.add("btn", "btn-secondary", "mt-2", "ms-2");
 
+            let noteLabel = document.createElement("label");
+            noteLabel.innerText = "Note: Your private key is never stored. Automated swaps require a digital signature, ensuring security and authenticity. It is used only at the time of execution and never retained";
+            noteLabel.style.display = "block";
+            noteLabel.style.marginTop = "10px";  // ✅ Added margin to separate from buttons
+            noteLabel.style.fontSize = "12px";
+            noteLabel.style.color = "gray";  // ✅ Styled to differentiate from main label
+
+
             container.appendChild(label);
+            container.appendChild(noteLabel);
             container.appendChild(input);
             container.appendChild(spinner);
             container.appendChild(confirmBtn);
