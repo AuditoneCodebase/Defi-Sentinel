@@ -1,3 +1,5 @@
+import copy
+
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from flask_session import Session
@@ -9,12 +11,15 @@ import functools
 from assessment.calculation import dashboard_stats
 from core.fetch_user_tokens import get_tokens_held
 from core.generate_report import analyze_defi_project
+from core.optimise_portfolio import rebalance_portfolio
 from assessment.agent_choice import project_list, project_for_dashboard
 from openai import OpenAI
 from dotenv import load_dotenv
 import os
 import markdown2
 import urllib.parse
+from eth_account import Account
+
 import json
 
 load_dotenv()
@@ -119,21 +124,16 @@ def my_tokens():
     and calculates the percentage of holdings in the portfolio.
     """
     user_tokens = get_tokens_held("sonic", session["wallet_address"], os.getenv("SONIC_API_KEY"))
-
     if not user_tokens or isinstance(user_tokens, dict):
         return render_template("my-tokens.html", message="No tokens found or an error occurred.")
-
     protocols_data = []
     total_portfolio_value = 0
-
     # Fetch all details from dashboard_stats in one loop
     for token in user_tokens:
         protocol_stats = dashboard_stats(token["name"], token["symbol"])
-
         # Extract price and calculate token's value in USD
         token_price = protocol_stats.get("tokenStats", {}).get("price_usd", 0)
         token_value = token["balance"] * token_price
-
         # Store processed data
         token["value_usd"] = round(token_value, 2)
         token["price_usd"] = round(token_price, 4)
@@ -234,15 +234,122 @@ def generate_report(name):
     session.pop("payment_verified", None)
     return jsonify({"message": "Report generated successfully.", "report": report_data})
 
-
 @app.route("/my-agent-flows")
 @login_required
 def my_agent_flows():
-    """
-    Fetch all agent flows and swaps executed for user
-    """
-    return render_template("my-agent-flows.html")
+    """Fetch all agent flows and executed swaps for the user."""
+    user_id = session.get("wallet_address")
+    if not user_id:
+        return redirect(url_for("login"))
 
+    agent_flows = list(db.agent_flows.find({"user_id": user_id}, {"_id": 1, "target_security_score": 1, "top_n": 1, "created_at": 1}))
+    executed_swaps = list(db.executed_swaps.find({"user_id": user_id}, {"_id": 0}))
+
+    return render_template("my-agent-flows.html", agent_flows=agent_flows, executed_swaps=executed_swaps)
+
+@app.route("/set-agent-flow", methods=["POST"])
+@login_required
+def set_agent_flow():
+    """Save user-defined agent flow for automated rebalancing."""
+    user_id = session.get("wallet_address")
+    if not user_id:
+        return jsonify({"error": "User not authenticated"}), 401
+
+    data = request.get_json()
+    target_security_score = data.get("target_security_score")
+    top_n = data.get("top_n")
+    if not target_security_score or not top_n:
+        return jsonify({"error": "Invalid input data"}), 400
+    agent_flow = {
+        "_id": uuid.uuid4().hex,
+        "user_id": user_id,
+        "target_security_score": target_security_score,
+        "top_n": top_n,
+        "created_at": datetime.datetime.utcnow()
+    }
+    db.agent_flows.insert_one(agent_flow)
+    return jsonify({"message": "Agent flow saved successfully"})
+
+import copy
+@app.route("/execute-agent-flow", methods=["POST"])
+@login_required
+def execute_agent_flow():
+    """Execute the selected agent flow for the user with real-time holdings and private key authentication."""
+    user_id = session.get("wallet_address")
+    if not user_id:
+        return jsonify({"message": "User not authenticated"}), 401
+
+    data = request.get_json()
+    flow_id = data.get("flow_id")
+    private_key = data.get("private_key")
+
+    if not flow_id or not private_key:
+        return jsonify({"message": "Flow ID and private key are required"}), 400
+
+    # Verify private key
+    try:
+        account = Account.from_key(private_key)
+        if account.address.lower() != user_id.lower():
+            return jsonify({"message": "Private key does not match the wallet address"}), 403
+    except Exception:
+        return jsonify({"message": f"Invalid private key: {str(e)}"}), 403
+
+    # Fetch agent flow
+    flow = db.agent_flows.find_one({"_id": flow_id, "user_id": user_id})
+    if not flow:
+        return jsonify({"message": "Agent flow not found"}), 404
+
+    # Fetch current token holdings
+    user_tokens = get_tokens_held("sonic", user_id, os.getenv("SONIC_API_KEY"))
+    if not user_tokens or isinstance(user_tokens, dict):
+        return jsonify({"message": "No tokens found or an error occurred."}), 400
+
+    protocols_data = []
+    total_portfolio_value = 0
+
+    # Process tokens and calculate portfolio distribution
+    for token in user_tokens:
+        protocol_stats = dashboard_stats(token["name"], token["symbol"])
+        token_price = protocol_stats.get("tokenStats", {}).get("price_usd", 0)
+        token_value = token["balance"] * token_price
+
+        token["value_usd"] = round(token_value, 2)
+        token["price_usd"] = round(token_price, 4)
+        token["contract_address"] = token["contract_address"]
+        total_portfolio_value += token_value
+
+        token.update(protocol_stats)
+        protocols_data.append(token)
+
+    # Calculate percentage holdings
+    for token in protocols_data:
+        token["holding_percent"] = round((token["value_usd"] / total_portfolio_value) * 100, 2) if total_portfolio_value > 0 else 0
+
+    current_holdings = copy.deepcopy(protocols_data)
+
+    # Perform rebalancing
+    rebalanced_tokens = rebalance_portfolio(copy.deepcopy(current_holdings), float(flow["target_security_score"]), private_key, int(flow["top_n"]))
+
+    if not isinstance(rebalanced_tokens, list):
+        return jsonify({"message": rebalanced_tokens["result"]}), 400
+
+    new_holdings = copy.deepcopy(rebalanced_tokens)
+
+    # Check if rebalancing made any changes
+    if new_holdings == current_holdings:
+        return jsonify({"message": "No changes were made during rebalancing."}), 400
+
+    # Store executed swap with correct original and new holdings
+    executed_swap = {
+        "_id": uuid.uuid4().hex,
+        "user_id": user_id,
+        "original_holdings": copy.deepcopy(current_holdings),
+        "new_holdings": new_holdings,
+        "executed_at": datetime.datetime.utcnow()
+    }
+    db.executed_swaps.insert_one(executed_swap)
+
+    return jsonify({"message": "Agent flow executed and swaps processed successfully.", "updated_holdings": new_holdings})
 @app.route("/log-out")
 @login_required
 def log_out():
