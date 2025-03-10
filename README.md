@@ -1,104 +1,96 @@
-# DeFi Sentinel
+# **DeFi-Sentinel: Automated Risk Assessment and Portfolio Optimization**
 
-DeFi Sentinel is an agent that evaluates DeFi projects using various data sources, AI-based risk assessments, and provides assessment for tokens held on Sonic. It allows evaluation of projects, retrieval of token data, and reports generation in an efficient manner. The application is built with Flask and uses MongoDB to store project reports.
+## **Overview**
+DeFi-Sentinel is a **DeFi risk monitoring and portfolio optimization tool** built using the **ZerePy Framework**. It integrates with **AuditOne API, Dex Screener API, and historical hack data sources** to provide **automated risk assessments, security insights, and portfolio rebalancing**.
 
-## Directory Structure
+![Sonic's Risk Watch](static/img/zerepy_server.png)
 
+## **Features**
+- **Automated security analysis** using the AuditOne API.
+- **Token security and market data retrieval** from multiple sources.
+- **Portfolio optimization** based on security scores and DeFi risk metrics.
+- **Automated swaps and risk-based trading** using smart contract interactions.
+- **Modular architecture** for easy customization and deployment.
+
+---
+
+## **Project Structure**
+
+### **Assessment Module (`assessment/`)**
+- `agent_choice.py` – Selects the projects for security reporting based on risk metrics.
+- `calculation.py` – Performs risk analysis and portfolio calculations.
+
+### **Core Functions (`core/`)**
+- `fetch_security_stats.py` – Retrieves security data from the AuditOne API.
+- `fetch_token_stats.py` – Fetches real-time token market statistics.
+- `fetch_tvl(future).py` – Collects total value locked (TVL) data.
+- `fetch_user_tokens.py` – Retrieves user token holdings and portfolio distribution.
+- `generate_report.py` – Generates security assessment reports.
+- `optimise_portfolio.py` – Rebalances portfolios based on security scores.
+
+### **Additional Components**
+- `scripts/` – Automation scripts for batch processing.
+- `static/` – Static assets such as CSS and JavaScript.
+- `templates/` – HTML templates for the Flask frontend.
+- `utils/` – Utility functions and helper modules.
+- `venv/` – Virtual environment for dependency management.
+- `.env` – Stores environment variables.
+- `app.py` – Main application logic (Flask API and web interface).
+- `LICENSE` – Licensing information.
+
+---
+
+## **Installation & Setup**
+### **Prerequisites**
+- Python 3.11+
+- MongoDB
+
+### **Installation**
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/defi-sentinel.git
+cd defi-sentinel
+
+# Create and activate virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
-assessment
-    ├── agent_choice.py        # Logic to evaluate projects on Sonic
-    └── user_tokens.py         # Logic to fetch and evaluate tokens in user wallet
-core
-    ├── fetch_audits_hacks.py  # Fetch audit/security score and hack data
-    ├── fetch_cmc_data.py     # Fetch CoinMarketCap data
-    ├── fetch_tvl.py          # Fetch TVL and DeFi-related metrics
-    └── fetch_user_tokens.py  # Fetch user's token data from sources
-scripts
-    ├── push_report_to_db.py  # One-time logic to push project data and AI reports to MongoDB
-    └── sonic_tvl_to_db.py    # Logic for pushing TVL data related to Sonic projects
-static
-    └── (Static files)        # Static assets (CSS, JS, images)
-templates
-    └── (HTML files)          # Flask templates for rendering reports
-utils
-    ├── db_client.py          # MongoDB client connection logic
-    ├── rate_limiters.py      # Rate limiting logic to avoid abuse
-    
-.env                          # Environment variables (API keys, DB credentials) add your own
-app.py                        # Main Flask application file
-Procfile                      # Heroku deployment configuration
+
+### **Environment Variables**
+Create a `.env` file in the project root and configure it as follows:
+```ini
+SONIC_API_KEY=your_api_key
+MONGO_URI=mongodb://localhost:27017/defi_sentinel
 ```
 
-## Overview
+### **Run the Application**
+```bash
+python app.py
+```
+Access the web interface at **`http://localhost:5000`**.
 
-### Core Components
+---
 
-- **Core**: This directory contains the logic to fetch essential data for evaluating DeFi projects, including audit/security scores, hack history, TVL, and other metrics.
-    - `fetch_audits_hacks.py`: Fetches audit/security scores and hack data from various sources.
-    - `fetch_cmc_data.py`: Fetches data related to CoinMarketCap (CMCs), such as market prices and rankings.
-    - `fetch_tvl.py`: Fetches TVL (Total Value Locked) and other DeFi metrics.
-    - `fetch_user_tokens.py`: Fetches details of tokens in a user's wallet.
+## **API References**
+- **AuditOne API:** [https://api.auditone.io/](https://api.auditone.io/)
+- **ZerePy Documentation:** [https://zerepy.auditone.io/docs](https://zerepy.auditone.io/docs)
+- **Sonic's Risk Watch:** [https://sonic.auditone.io](https://sonic.auditone.io)
 
-### Scripts
+---
 
-- **Scripts**: These are used to push data from various sources to MongoDB. These scripts handle one-time operations to optimize the application’s data retrieval process.
-    - `push_report_to_db.py`: A script to push generated reports and project data to MongoDB.
-    - `sonic_tvl_to_db.py`: A script for pushing TVL data related to Sonic projects into MongoDB.
+## **Contributions**
+We welcome contributions! Please follow these steps:
+1. **Fork the repository** on GitHub.
+2. **Create a new branch** for your feature or bug fix.
+3. **Commit your changes** and push to your forked repository.
+4. **Submit a pull request** to the main repository.
 
-### Assessment
+For major changes, please open an issue first to discuss the proposed modification.
 
-- **Assessment**: This module contains logic for project evaluations.
-    - `agent_choice.py`: This script is used for evaluating DeFi projects on Sonic and other dynamic tokens.
-    - `user_tokens.py`: This script dynamically fetches user tokens and evaluates them based on their current status and risk.
+---
 
-### Utilities
-
-- **Utils**: This folder includes utility files for connecting to MongoDB and handling rate limiting.
-    - `db_client.py`: MongoDB client configuration and connection logic.
-    - `rate_limiters.py`: Implements rate-limit functionality to avoid abuse of the system.
-
-### Static and Templates
-
-- **Static**: Contains CSS, JavaScript, and image files used to style the application’s web pages.
-- **Templates**: Contains HTML templates used by the Flask app to render reports and other data.
-
-## How to Run
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/AuditoneCodebase/Defi-Sentinel
-   cd Defi-Sentinel
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Set up environment variables in the `.env` file:
-   - `MONGO_URI`: MongoDB connection string.
-   - `OPENAI_API_KEY`: API key for OpenAI.
-   - `SONIC_API_KEY`: API key from Sonic explorer developer dashboard
-
-4. Run the Flask application:
-
-   ```bash
-   python app.py
-   ```
-
-5. The application will be available at `http://127.0.0.1:5000` by default.
-
-## Contributions
-
-We welcome contributions to improve the application. Here are ways you can help:
-- Add new data sources for evaluating DeFi projects.
-- Improve the rate limiting logic to handle more requests efficiently.
-- Implement more evaluation criteria for projects.
-
-If you would like to contribute, please fork the repo, make your changes, and create a pull request.
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for more details.
+## **License**
+This project is licensed under the **MIT License**.
