@@ -26,12 +26,17 @@
 
                 <!-- Security Score -->
                 <td>
-                    {% if details.auditSecurityScore.total_score | default(0) == 0 %}
-                        <span class="btn btn-sm bg-secondary text-white">0</span>
+                    {% set score = details.auditSecurityScore.total_score | default(0) %}
+
+                    {% if score >= 80 %}
+                        <span class="btn btn-sm bg-success text-white">{{ score }}</span>
+                    {% elif score >= 50 %}
+                        <span class="btn btn-sm bg-warning text-dark">{{ score }}</span>
                     {% else %}
-                        <span class="btn btn-sm bg-primary">{{ details.auditSecurityScore.total_score }}</span>
+                        <span class="btn btn-sm bg-danger text-white">{{ score }}</span>
                     {% endif %}
                 </td>
+
 
                 <!-- Risk Level -->
                 <td>
@@ -85,7 +90,7 @@
 
                 <!-- View Report Button -->
                 <td>
-                    <a class="btn btn-sm btn-dark text-white">Report</a>
+                    <a href={{url_for('analyze_token')}} class="btn btn-sm btn-dark text-white">View Details</a>
                 </td>
             </tr>
             {% endfor %}

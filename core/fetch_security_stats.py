@@ -49,3 +49,4 @@ def stats_by_project(project_name):
                 "audit_data": audit_data,
                 "hacks_data":hacks_data
             }
+
