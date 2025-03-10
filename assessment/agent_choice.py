@@ -12,9 +12,9 @@ project_list = {
 }
 
 project_for_dashboard = {
-    "Solv Protocol": "SOLV",
-    "Silo Finance": "SILO",
-    "Wagmi": "WAGMI",
     "Metropolis Token": "METRO",
-    "Shadow": "SHADOW"
+    "Shadow": "SHADOW",
+    "Silo Finance": "SILO",
+    "Solv Protocol": "SOLV",
+    "Wagmi": "WAGMI"
 }

@@ -1,57 +1,51 @@
-### ZerePy Server Setup
+### **Sonic's Risk Watch - ZerePy Framework Documentation**
 
-AuditOne has set up the **ZerePy Server** with **market stats** and **security stats** features integrated into the **Sonic connection**.
+#### **Overview**
+Sonic's Risk Watch, built on the ZerePy framework from the Blorm Network, is developed for automated risk assessment and DeFi security monitoring and perform actions to maintain users portfolio optimised to security. It integrates with AuditOne and market data sources to provide **real-time risk metrics, automated swaps, and advanced security insights**.
 
-ZerePy is a modular framework for agents on-chain that is configured with various services to run agents and for the Sonic's Risk Watch, the following actions are registered 
+#### **ZerePy Framework in Sonic's Risk Watch**
+ZerePy serves as the **core processing engine** for Sonic's Risk Watch, enabling:
 
-- **Market Stats**: Gathered from **Dex Screener API**.
-- **Security Stats**: Fetched from **AuditOne API**.
+- Secure API integrations with **AuditOne Security Stats API** and **Dex Screener Market Data**.
 
-These data points are processed through the **Sonic connection**, enabling real-time analytics for risk assessment.
+- Automated **portfolio rebalancing and risk-based swap execution**.
 
-The diagram below outlines the **ZerePy Server setup**:
-<center>
-<img src="static/img/zerepy_server.png" alt="ZerePy Server Diagram" width="600">
-</center>
+- A modular architecture that allows **scalable risk assessment and DeFi security automation**.
 
+#### **System Architecture**
+![Sonic's Risk Watch](static/img/zerepy_server.png)
 
 ##### **Data Sources**
-- **AuditOne API**: Collects security insights, audit data, and vulnerability reports.
-- **Dex Screener API**: Fetches token performance, trading volume, and liquidity metrics.
-- **Contest Platforms**: Sources audit data from **Cantina, Sherlock, Code4rena** and etc...
-- **Hack Data Providers**: Uses past exploit records from **Rekt** and **SlowMist**.
+- **AuditOne API**: Provides **security stats** from audit contest platforms such as AuditOne, Sherlock, Code4rena, and Cantina.
+- **Rekt & SlowMist**: Supplies **historical hack data** for risk assessment.
+- **Dex Screener API**: Fetches **real-time token market stats**.
 
-##### **Data Flow**
-1. **Market & Security Data Collection**  
-   - AuditOne API and Dex Screener API push data into the **Sonic connection**.
+##### **Processing and Automation**
+- The **Sonic connection** on ZerePy is coded with logic to integrate security and market data
+- **ZerePy Framework** runs **automated security evaluations** based on the received data.
+- **Auditone-sonic agent** executes **automated portfolio rebalancing** and performs **automated swaps**.
+- **Deployed using Docker and Render**.
 
-2. **Processing via ZerePy Framework**  
-   - ZerePy aggregates, analyzes, and standardizes risk metrics.
+##### **Key Features**
+- **Automated Risk Metrics and Reports**
+- **Configurable Agent flows to execute automated swaps to optimise security**
+- **Market-driven Portfolio Optimization**
+- **Automated Swap Execution with targeted security score**
+- **DeFi Application Stack**:
+  - Backend: **Flask, MongoDB**
+  - Frontend: **Bootstrap**
+  - Wallet Integration: **Metamask**
+  - Blockchain Data: **SonicScan**
+  - Cloud Deployment: **Heroku, Render**
 
-3. **Deployment Using Docker & Render**  
-   - The ZerePy Server is containerized with **Docker** and deployed on **Render** for scalability.
+#### **Enhancements in Sonic's Risk Watch**
+- **AuditOne Security Stats API added to Sonic Connection**
+- **Token stats now include real-time market data from Dex Screener**
+- **Improved automation for risk-based DeFi trading strategies**
 
-4. **APIs Hosted on Heroku**  
-   - The **AuditOne API** is hosted on **Heroku** to provide a gateway for security and audit reports.
+#### **Documentation and API References**
+- **AuditOne API**: [https://api.auditone.io/](https://api.auditone.io/)
+- **ZerePy Server API Docs**: [https://zerepy.auditone.io/docs](https://zerepy.auditone.io/docs)
+- **Sonic's Risk Watch**: [https://sonic.auditone.io](https://sonic.auditone.io)
 
----
-
-##### **Deployment Stack**
-- **Docker**: Containers for ZerePy Framework.
-- **Render**: Cloud hosting for the ZerePy Server.
-- **Heroku**: API hosting for AuditOne security data.
-
-##### **Useful Links**
-- **AuditOne API Docs**: [https://api.auditone.io/](https://api.auditone.io/)
-- **ZerePy Server Docs**: [https://zerepy.auditone.io/docs](https://zerepy.auditone.io/docs)
-
----
-
-##### **Next Steps**
-AuditOne wants to actively contribute to the **ZerePy Server** by:
-
-- Adding **more analytics models** for risk classification
-- Expanding **data sources** for deeper security insights.
-- Enhancing **real-time monitoring** of token vulnerabilities.
-
-If you are interested in **additional features**, submit your request here: <a href="https://forms.gle/6XTshhzjfZ8hyqQh8" target="_blank" rel="noopener noreferrer"><b>Feature Request Form</b></a>
+This documentation outlines the role of **ZerePy** in powering Sonic's Risk Watch, with a focus on **secure, automated DeFi risk management and swap execution**.
