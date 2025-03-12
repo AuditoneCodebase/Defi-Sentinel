@@ -180,6 +180,14 @@ async function ensureSonicChain() {
 
 async function addAuditTokenToMetaMask() {
     try {
+        // Check if token was already added before (stored in localStorage)
+        const tokenAdded = localStorage.getItem("audit_token_added");
+        if (tokenAdded) {
+            console.log("✅ AUDIT Token is already added. Skipping prompt.");
+            return;
+        }
+
+        // Request to add the token
         const wasAdded = await window.ethereum.request({
             method: "wallet_watchAsset",
             params: {
@@ -195,6 +203,7 @@ async function addAuditTokenToMetaMask() {
 
         if (wasAdded) {
             console.log("✅ AUDIT Token added to MetaMask!");
+            localStorage.setItem("audit_token_added", "true"); // Store the flag
         } else {
             console.log("❌ Token addition declined.");
         }
