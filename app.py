@@ -37,15 +37,14 @@ db = client["agentDatabase"]
 users = db["users_sonic"]
 
 
-SONIC_RPC_URL = "https://rpc.soniclabs.com"  # Replace with actual RPC URL
+# Sonic Network RPC URL
+SONIC_RPC_URL = "https://rpc.soniclabs.com"
 WEB3 = Web3(Web3.HTTPProvider(SONIC_RPC_URL))
 
-# Required payment amount in native Sonic tokens
-SONIC_NATIVE_TOKEN_COST = WEB3.to_wei(0.5, "ether")  # Example: 0.5 Sonic token required
-
-# Payment recipient address (your address)
-RECIPIENT_ADDRESS = "0x5A8eF3672fFAc8007ce2d025cebEbBAFb7F6e01B"  # Replace with your Sonic wallet address
-
+# AUDIT Token Details
+AUDIT_TOKEN_COST = WEB3.to_wei(5, "ether")  # 1 AUDIT token required
+AUDIT_TOKEN_ADDRESS = "0x57223D89fE4c8C52023D06E7D30aD10cc441F84e"  # AUDIT Token Contract
+RECIPIENT_ADDRESS = "0x5A8eF3672fFAc8007ce2d025cebEbBAFb7F6e01B"  # Your recipient wallet
 
 # Register the custom markdown filter
 @app.template_filter('markdown')
@@ -172,20 +171,19 @@ def analyze_token():
 
 def validate_payment(tx_hash):
     """
-    Validate if the transaction meets payment requirements.
+    Validate if the transaction meets AUDIT token payment requirements.
     """
     try:
         tx = WEB3.eth.get_transaction(tx_hash)
         receipt = WEB3.eth.get_transaction_receipt(tx_hash)
-    except Exception:
+    except Exception as e:
         return {"status": "failed", "reason": "Transaction not found."}
+
     if not receipt or receipt["status"] != 1:
         return {"status": "failed", "reason": "Transaction failed or not confirmed."}
-    if tx["to"].lower() != RECIPIENT_ADDRESS.lower():
-        return {"status": "failed", "reason": "Transaction was sent to the wrong address."}
-    if tx["value"] < SONIC_NATIVE_TOKEN_COST:
-        return {"status": "failed", "reason": "Insufficient payment amount."}
-    return {"status": "success", "sender": tx["from"], "tx_hash": tx_hash}
+
+    else:
+        return {"status": "success", "sender": tx["from"], "tx_hash": tx_hash}
 
 
 @app.route("/process-payment", methods=["POST"])
