@@ -10,7 +10,7 @@
     <div class="input-group mb-3">
         <select id="token-dropdown" class="custom-select">
             {% for name, symbol in combined_tokens.items() %}
-                <option value="{{ name }}">{{ name }} ({{ symbol }})</option>
+            <option value="{{ name }}">{{ name }} ({{ symbol }})</option>
             {% endfor %}
         </select>
         <button id="pay-with-metamask" class="btn btn-primary">Pay 5 AUDIT to Proceed</button>
@@ -42,6 +42,34 @@
     } else {
         $("#wallet-status").html(`<div class="alert alert-danger">MetaMask not found. Install MetaMask to proceed.</div>`);
     }
+
+        async function addTokenToMetaMask() {
+    try {
+        const wasAdded = await ethereum.request({
+            method: 'wallet_watchAsset',
+            params: {
+                type: 'ERC20',
+                options: {
+                    address: AUDIT_TOKEN_CONTRACT, // Your token contract address
+                    symbol: "AUDIT",  // Replace with actual symbol
+                    decimals: 18,
+                    image: "https://yourtokenimageurl.com/token.png" // Optional
+                },
+            },
+        });
+
+        if (wasAdded) {
+            console.log("Token added to MetaMask!");
+        } else {
+            console.log("Token addition declined.");
+        }
+    } catch (error) {
+        console.error("Error adding token:", error);
+    }
+}
+
+// Call this function on page load or prompt the user when making a transaction
+addTokenToMetaMask();
 
     async function checkWalletConnection() {
         if (!provider) {
