@@ -290,7 +290,7 @@ def execute_agent_flow():
         if account.address.lower() != user_id.lower():
             return jsonify({"message": "Private key does not match the wallet address"}), 403
     except Exception:
-        return jsonify({"message": f"Invalid private key: {str(e)}"}), 403
+        return jsonify({"message": f"Invalid private key"}), 403
 
     # Fetch agent flow
     flow = db.agent_flows.find_one({"_id": flow_id, "user_id": user_id})
