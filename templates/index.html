@@ -97,34 +97,111 @@
     <!-- JavaScript -->
     <script>
         document.getElementById('connectWallet').addEventListener('click', async () => {
-            if (window.ethereum) {
-                try {
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    const walletAddress = accounts[0];
-                    document.getElementById('walletAddress').textContent = `Connected: ${walletAddress}`;
+    if (!window.ethereum) {
+        alert('MetaMask not detected. Please install MetaMask to continue.');
+        return;
+    }
 
-                    // Send wallet address to Flask backend to store in session
-                    fetch('/store-wallet', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ walletAddress })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.redirect) {
-                            window.location.href = data.redirect;  // Redirect to dashboard
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
-                } catch (error) {
-                    console.error('Wallet connection failed:', error);
-                    document.getElementById('walletAddress').textContent = 'Connection failed. Try again.';
-                }
-            } else {
-                alert('MetaMask not detected. Please install MetaMask to continue.');
+    try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        const walletAddress = accounts[0];
+        document.getElementById('walletAddress').textContent = `Connected: ${walletAddress}`;
+
+        // Verify or switch to Sonic Chain
+        await ensureSonicChain();
+
+        // Ensure AUDIT token is added
+        await addAuditTokenToMetaMask();
+
+        // Send wallet address to Flask backend
+        fetch('/store-wallet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ walletAddress })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.redirect) {
+                window.location.href = data.redirect;  // Redirect to dashboard
             }
+        })
+        .catch(error => console.error('Error:', error));
+    } catch (error) {
+        console.error('Wallet connection failed:', error);
+        document.getElementById('walletAddress').textContent = 'Connection failed. Try again.';
+    }
+});
+
+const SONIC_CHAIN_ID = "0x92"; // Sonic Chain ID
+const SONIC_NETWORK_PARAMS = {
+    chainId: SONIC_CHAIN_ID,
+    chainName: "Sonic Mainnet",
+    nativeCurrency: {
+        name: "Sonic",
+        symbol: "S",
+        decimals: 18,
+    },
+    rpcUrls: ["https://rpc.soniclabs.com"],
+    blockExplorerUrls: ["https://sonicscan.org/"],
+};
+
+const AUDIT_TOKEN_CONTRACT = "0x57223D89fE4c8C52023D06E7D30aD10cc441F84e"; // AUDIT Token Contract Address
+
+async function ensureSonicChain() {
+    try {
+        const currentChain = await window.ethereum.request({ method: "eth_chainId" });
+
+        if (currentChain !== SONIC_CHAIN_ID) {
+            try {
+                await window.ethereum.request({
+                    method: "wallet_switchEthereumChain",
+                    params: [{ chainId: SONIC_CHAIN_ID }]
+                });
+                console.log("✅ Switched to Sonic Chain.");
+            } catch (error) {
+                if (error.code === 4902) {
+                    console.log("🔄 Sonic Chain not found. Adding now...");
+                    await window.ethereum.request({
+                        method: "wallet_addEthereumChain",
+                        params: [SONIC_NETWORK_PARAMS]
+                    });
+                    console.log("✅ Sonic Chain added.");
+                } else {
+                    console.error("❌ Error switching to Sonic Chain:", error);
+                }
+            }
+        } else {
+            console.log("✅ Already on Sonic Chain.");
+        }
+    } catch (error) {
+        console.error("❌ Error ensuring Sonic Chain:", error);
+    }
+}
+
+async function addAuditTokenToMetaMask() {
+    try {
+        const wasAdded = await window.ethereum.request({
+            method: "wallet_watchAsset",
+            params: {
+                type: "ERC20",
+                options: {
+                    address: AUDIT_TOKEN_CONTRACT,
+                    symbol: "AUDIT",
+                    decimals: 18,
+                    image: "https://yourtokenimageurl.com/token.png" // Optional
+                },
+            },
         });
 
+        if (wasAdded) {
+            console.log("✅ AUDIT Token added to MetaMask!");
+        } else {
+            console.log("❌ Token addition declined.");
+        }
+    } catch (error) {
+        console.error("❌ Error adding AUDIT Token:", error);
+    }
+}
     </script>
 </body>
 </html>
