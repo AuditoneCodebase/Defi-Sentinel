@@ -18,7 +18,7 @@
     <div id="wallet-status" class="mt-3"></div>
 
     <div id="payment-section" class="mt-4" style="display: none;">
-        <button id="pay-with-metamask" class="btn btn-success">Pay 0.5 Sonic to Proceed</button>
+        <button id="pay-with-metamask" class="btn btn-success">Pay 5 AUDIT to Proceed</button>
     </div>
 
     <div id="payment-status" class="mt-3"></div>
@@ -36,6 +36,13 @@
     let provider = window.ethereum;
     const SONIC_CHAIN_ID = "0x92"; // 146 in hexadecimal
     const RECIPIENT_ADDRESS = "0x5A8eF3672fFAc8007ce2d025cebEbBAFb7F6e01B"; // Your recipient wallet
+
+    let web3;
+    if (typeof window.ethereum !== 'undefined') {
+        web3 = new Web3(window.ethereum);
+    } else {
+        $("#wallet-status").html(`<div class="alert alert-danger">MetaMask not found. Install MetaMask to proceed.</div>`);
+    }
 
     async function checkWalletConnection() {
         if (!provider) {
@@ -79,48 +86,54 @@
     }
 
     async function payWithMetaMask() {
-        if (!userAccount) {
-            $("#payment-status").html(`<div class="alert alert-warning">Please connect your wallet first.</div>`);
-            return;
-        }
-
-        let amountInWei = Web3.utils.toWei("0.5", "ether");
-
-        try {
-            let txHash = await provider.request({
-                method: "eth_sendTransaction",
-                params: [{
-                    from: userAccount,
-                    to: RECIPIENT_ADDRESS,
-                    value: Web3.utils.toHex(amountInWei),
-                    gas: Web3.utils.toHex(21000)
-                }]
-            });
-
-            $("#payment-status").html(`
-                <div class="alert alert-info">
-                    Transaction sent! Waiting for confirmation...<br>
-                    Tx Hash: <a href="https://sonic.explorer.io/tx/${txHash}" target="_blank">${txHash}</a>
-                </div>
-            `);
-
-            console.log(`🔍 Transaction ${txHash} sent. Waiting for mining...`);
-
-            // Wait 10 seconds before validating (give time for transaction to be mined)
-            setTimeout(async () => {
-                let validationResponse = await validatePayment(txHash);
-                if (validationResponse.success) {
-                    $("#payment-status").html(`<div class="alert alert-success">${validationResponse.message}</div>`);
-                    $("#analysis-section").show();
-                } else {
-                    $("#payment-status").html(`<div class="alert alert-danger">${validationResponse.error}</div>`);
-                }
-            }, 10000); // 10 seconds delay
-        } catch (error) {
-            console.error("❌ Payment transaction failed:", error);
-            $("#payment-status").html(`<div class="alert alert-danger">Transaction failed. Please try again.</div>`);
-        }
+    if (!userAccount) {
+        $("#payment-status").html(`<div class="alert alert-warning">Please connect your wallet first.</div>`);
+        return;
     }
+
+    let amountInWei = Web3.utils.toWei("5", "ether");
+
+    const tokenContract = new web3.eth.Contract([
+        {
+            "constant": false,
+            "inputs": [
+                { "name": "_to", "type": "address" },
+                { "name": "_value", "type": "uint256" }
+            ],
+            "name": "transfer",
+            "outputs": [{ "name": "", "type": "bool" }],
+            "type": "function"
+        }
+    ], "0x57223D89fE4c8C52023D06E7D30aD10cc441F84e"); // AUDIT Token Contract Address
+
+    try {
+        let transferTx = await tokenContract.methods.transfer("0x5A8eF3672fFAc8007ce2d025cebEbBAFb7F6e01B", amountInWei).send({ from: userAccount });
+
+        $("#payment-status").html(`
+            <div class="alert alert-success">
+                Payment Successful! Transaction Hash:
+                <a href="https://sonic.explorer.io/tx/${transferTx.transactionHash}" target="_blank">
+                    ${transferTx.transactionHash}
+                </a>
+            </div>
+        `);
+
+        setTimeout(async () => {
+            let validationResponse = await validatePayment(transferTx.transactionHash);
+            if (validationResponse.success) {
+                $("#payment-status").html(`<div class="alert alert-success">${validationResponse.message}</div>`);
+                $("#analysis-section").show();
+            } else {
+                $("#payment-status").html(`<div class="alert alert-danger">${validationResponse.error}</div>`);
+            }
+        }, 10000);
+    } catch (error) {
+        console.error("Payment transaction failed:", error);
+        $("#payment-status").html(`<div class="alert alert-danger">Transaction failed. Please try again.</div>`);
+    }
+}
+
+
 
     async function validatePayment(txHash) {
         if (!txHash) {
