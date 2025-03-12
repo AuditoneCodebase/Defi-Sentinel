@@ -13,21 +13,17 @@
                 <option value="{{ name }}">{{ name }} ({{ symbol }})</option>
             {% endfor %}
         </select>
+        <button id="pay-with-metamask" class="btn btn-primary">Pay 5 AUDIT to Proceed</button>
     </div>
-
-    <div id="wallet-status" class="mt-3"></div>
 
     <div id="payment-section" class="mt-4" style="display: none;">
-        <button id="pay-with-metamask" class="btn btn-success">Pay 5 AUDIT to Proceed</button>
+        Note: <a href="https://app.metropolis.exchange/swap" target="_blank">Click here to get $AUDIT tokens</a>
     </div>
-    <div>
-        <br>
-    <a href="https://app.metropolis.exchange/swap" target="_blank">Click here to get $AUDIT tokens</a>
-    </div>
+
     <div id="payment-status" class="mt-3"></div>
 
     <div id="analysis-section" class="mt-4" style="display: none;">
-        <button id="analyze-btn" class="btn btn-primary">Generate Report</button>
+        <button id="analyze-btn" class="btn btn-primary w-100">Payment verified and Click to Generate Report</button>
         <div id="analysis-result" class="mt-3"></div>
     </div>
 </div>
@@ -97,6 +93,20 @@
     let amountInWei = Web3.utils.toWei("5", "ether");
 
     const tokenContract = new web3.eth.Contract([
+    {
+            "constant": true,
+            "inputs": [],
+            "name": "name",
+            "outputs": [{ "name": "", "type": "string" }],
+            "type": "function"
+        },
+        {
+            "constant": true,
+            "inputs": [],
+            "name": "symbol",
+            "outputs": [{ "name": "", "type": "string" }],
+            "type": "function"
+        },
         {
             "constant": false,
             "inputs": [
@@ -135,8 +145,6 @@
         $("#payment-status").html(`<div class="alert alert-danger">Transaction failed. Please try again.</div>`);
     }
 }
-
-
 
     async function validatePayment(txHash) {
         if (!txHash) {
