@@ -149,7 +149,54 @@
     const RECIPIENT_ADDRESS = "0x5A8eF3672fFAc8007ce2d025cebEbBAFb7F6e01B"; // Receiver Wallet
     const AUDIT_TOKEN_CONTRACT = "0x57223D89fE4c8C52023D06E7D30aD10cc441F84e"; // Audit Token Contract Address
 
-    async function addTokenToMetaMask() {
+    let web3;
+    if (typeof window.ethereum !== 'undefined') {
+        web3 = new Web3(window.ethereum);
+    } else {
+        $("#wallet-status").html(`<div class="alert alert-danger">MetaMask not found. Install MetaMask to proceed.</div>`);
+    }
+    
+    async function checkWalletConnection() {
+        if (!provider) {
+            $("#wallet-status").html(`<div class="alert alert-danger">MetaMask not found. Install MetaMask to proceed.</div>`);
+            return;
+        }
+
+        try {
+            const accounts = await provider.request({ method: "eth_accounts" });
+            const currentChain = await provider.request({ method: "eth_chainId" });
+
+            if (accounts.length > 0) {
+                userAccount = accounts[0];
+
+                if (currentChain !== SONIC_CHAIN_ID) {
+                    await promptSwitchNetwork();
+                } else {
+                    $("#wallet-status").html(`<div class="alert alert-success">Connected: ${userAccount}</div>`);
+                    $("#payment-section").show();
+                }
+            } else {
+                $("#wallet-status").html(`<div class="alert alert-warning">Wallet not connected. Please connect.</div>`);
+                $("#payment-section").hide();
+            }
+        } catch (error) {
+            console.error("❌ Error checking wallet connection:", error);
+        }
+    }
+
+    async function promptSwitchNetwork() {
+        try {
+            await provider.request({
+                method: "wallet_switchEthereumChain",
+                params: [{ chainId: SONIC_CHAIN_ID }]
+            });
+            console.log("✅ Switched to Sonic Network");
+        } catch (switchError) {
+            console.error("❌ Network switch error:", switchError);
+            $("#wallet-status").html(`<div class="alert alert-danger">Please switch to the Sonic Network manually.</div>`);
+        }
+    }
+async function addTokenToMetaMask() {
     try {
         const wasAdded = await ethereum.request({
             method: 'wallet_watchAsset',
@@ -176,7 +223,6 @@
 
 // Call this function on page load or prompt the user when making a transaction
 addTokenToMetaMask();
-
 
     function showStatus(message) {
         $("#status-message").html(message);
