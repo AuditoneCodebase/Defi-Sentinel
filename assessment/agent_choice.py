@@ -15,6 +15,6 @@ project_for_dashboard = {
     "Metropolis Token": "METRO",
     "Shadow": "SHADOW",
     "Silo Finance": "SILO",
-    "Solv Protocol": "SOLV",
-    "Wagmi": "WAGMI"
+    "Wagmi": "WAGMI",
+    "Yel Finance": "YEL"
 }
