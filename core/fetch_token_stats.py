@@ -1,6 +1,5 @@
 import requests
 
-
 def load_agent():
     """Ensures the agent is loaded before fetching token stats."""
     url = "https://zerepy.auditone.io/agents/auditone-sonic/load"
@@ -33,6 +32,8 @@ def stats_by_symbol(symbol):
     }
 
     response = requests.post(url, headers=headers, json=data)
+
+    print(response)
 
     if response.status_code == 200:
         result = response.json()
@@ -97,12 +98,10 @@ def stats_by_symbol(symbol):
         "token": token_data.get("token", symbol),
         "price_usd": price_usd,
         "total_liquidity":total_liquidity,
-        "total_market_cap":f"{total_market_cap:,.0f}",
-        "total_volume_24h": f"{total_volume_24h:,.0f}",
-        "liquidity_ratio": round(liquidity_risk,2),
+        "total_market_cap": f"{float(total_market_cap):,.0f}" if isinstance(total_market_cap, (int, float)) else total_market_cap,
+        "total_volume_24h": f"{float(total_volume_24h):,.0f}" if isinstance(total_volume_24h, (int, float)) else total_volume_24h,
+        "liquidity_ratio": round(liquidity_risk,2) if isinstance(liquidity_risk,float) else liquidity_risk,
         "liquidity_risk": liquidity_risk_level,
-        "buy_sell_ratio": round(buy_sell_ratio,2),
+        "buy_sell_ratio": round(buy_sell_ratio,2) if isinstance(buy_sell_ratio,float) else buy_sell_ratio,
         "market_sentiment": market_sentiment
     }
-
-
