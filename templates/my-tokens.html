@@ -19,6 +19,7 @@
             <tr>
                 <th>Project</th>
                 <th>% Holdings</th>
+                <th>Health Score</th>
                 <th>Security Score</th>
                 <th>Liquidity Risk</th>
                 <th>Market Sentiment</th>
@@ -38,6 +39,19 @@
                     <span class="btn btn-sm bg-info text-white">
                         {{ details.holding_percent | round(2) }}%
                     </span>
+                </td>
+
+                <!-- Health Score -->
+                 <td>
+                    {% set score = details.healthScore | default(0) %}
+
+                    {% if score >= 80 %}
+                        <span class="btn btn-sm bg-success text-white">{{ score }}</span>
+                    {% elif score >= 50 %}
+                        <span class="btn btn-sm bg-warning text-dark">{{ score }}</span>
+                    {% else %}
+                        <span class="btn btn-sm bg-danger text-white">{{ score }}</span>
+                    {% endif %}
                 </td>
 
                 <!-- Security Score -->

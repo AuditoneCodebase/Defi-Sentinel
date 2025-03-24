@@ -132,10 +132,10 @@ def my_tokens():
         protocol_stats = dashboard_stats(token["name"], token["symbol"])
         # Extract price and calculate token's value in USD
         token_price = protocol_stats.get("tokenStats", {}).get("price_usd", 0)
-        token_value = token["balance"] * token_price
+        token_value = token["balance"] * token_price if isinstance(token_price,(int,float)) else 0
         # Store processed data
-        token["value_usd"] = round(token_value, 2)
-        token["price_usd"] = round(token_price, 4)
+        token["value_usd"] = round(token_value, 2) if isinstance(token_value,(int,float)) else 0
+        token["price_usd"] = round(token_price, 4) if isinstance(token_price,(int,float)) else 0
         token["contract_address"] = token["contract_address"]
         total_portfolio_value += token_value  # Update total holdings value
         # Merge dashboard_stats data directly into token dictionary
@@ -348,6 +348,7 @@ def execute_agent_flow():
     db.executed_swaps.insert_one(executed_swap)
 
     return jsonify({"message": "Agent flow executed and swaps processed successfully.", "updated_holdings": new_holdings})
+
 @app.route("/log-out")
 @login_required
 def log_out():
@@ -367,4 +368,4 @@ def zerepy_docs():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8001, debug=True)
