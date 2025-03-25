@@ -12,7 +12,6 @@ def load_agent():
     if response.status_code == 200:
         return True  # Agent loaded successfully
     else:
-        print(f"Error loading agent: {response.status_code}")
         return False  # Failed to load agent
 
 def stats_by_project(project_name):
