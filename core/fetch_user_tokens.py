@@ -11,8 +11,8 @@ CHAIN_API_BASE_URLS = {
 
 # Blocklist of known spam token contracts (can be updated)
 SPAM_TOKENS = [
-    "0xspamtokencontract1...",
-    "0xspamtokencontract2..."
+    "0xfffffff80e1291dbb712536eebc9c27ff274a78e",
+    "0xd604d2e046b411fb7a8f77f7b91924bcd51e087a"
 ]
 
 # Minimum balance threshold to filter small airdrops (set to 0.01 as default)
@@ -54,7 +54,7 @@ def get_tokens_held(chain, wallet_address, api_key):
         value = int(tx["value"]) / (10 ** int(tx["tokenDecimal"]))
 
         # **Ignore spam tokens**
-        if token_contract in SPAM_TOKENS:
+        if token_contract.lower() in SPAM_TOKENS:
             continue
 
         # **Initialize token if not already in dictionary**
@@ -75,4 +75,4 @@ def get_tokens_held(chain, wallet_address, api_key):
     # **Filter out tokens with zero or negative balance**
     filtered_tokens = [token for token in tokens.values() if token["balance"] > MIN_BALANCE_THRESHOLD]
 
-    return filtered_tokens  # Return only tokens the user actually holds
+    return filtered_tokens
