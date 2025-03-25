@@ -82,7 +82,7 @@ def dashboard_stats(project_name,symbol):
         "pastHacks": hack_data if hack_data else "NA",
         "symbol": symbol,
         "tokenStats": token_stats,
-        "healthScore":health_score
+        "healthScore":int(health_score)
     }
 
     return project_data
