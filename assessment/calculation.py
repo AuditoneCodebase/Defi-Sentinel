@@ -73,7 +73,7 @@ def dashboard_stats(project_name,symbol):
             (0.3 * audit_security_score["total_score"]) +
             (0.3 * market_sentiment_score) +
             (0.2 * liquidity_score) +
-            (0.2 * new_security_incident)
+            (0.2 * 1)
     )
 
     # Combine all data
